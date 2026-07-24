@@ -26,18 +26,15 @@ func issueComments() *cli.Command {
 			if err != nil {
 				return err
 			}
-			is, err := client.GetIssue(id)
+			comments, err := client.ListComments(id)
 			if err != nil {
 				return err
 			}
-			if is.ID == "" {
-				return fmt.Errorf("issue %s not found", id)
-			}
 			if c.Bool("json") {
-				printJSON(is.Comments.Nodes)
+				printJSON(comments)
 				return nil
 			}
-			for _, cm := range is.Comments.Nodes {
+			for _, cm := range comments {
 				who := ""
 				if cm.User != nil {
 					who = cm.User.Name

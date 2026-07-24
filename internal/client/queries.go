@@ -122,6 +122,47 @@ func ListIssues(f IssueFilter) ([]Issue, error) {
 	}
 }
 
+// ListComments returns every comment on an issue (identifier or UUID), paging
+// through the connection. GetIssue only carries the first page for a glance;
+// this is the thorough fetch for `issue comments`.
+func ListComments(issueID string) ([]Comment, error) {
+	q := `query($id: String!, $first: Int!, $after: String) {
+		issue(id: $id) {
+			comments(first: $first, after: $after) {
+				nodes { id body createdAt user { name displayName } }
+				pageInfo { hasNextPage endCursor }
+			}
+		}
+	}`
+	var all []Comment
+	var after string
+	for {
+		var out struct {
+			Issue struct {
+				Comments struct {
+					Nodes    []Comment `json:"nodes"`
+					PageInfo struct {
+						HasNextPage bool   `json:"hasNextPage"`
+						EndCursor   string `json:"endCursor"`
+					} `json:"pageInfo"`
+				} `json:"comments"`
+			} `json:"issue"`
+		}
+		vars := map[string]any{"id": issueID, "first": 100}
+		if after != "" {
+			vars["after"] = after
+		}
+		if err := Query(q, vars, &out); err != nil {
+			return nil, err
+		}
+		all = append(all, out.Issue.Comments.Nodes...)
+		if !out.Issue.Comments.PageInfo.HasNextPage {
+			return all, nil
+		}
+		after = out.Issue.Comments.PageInfo.EndCursor
+	}
+}
+
 // CreateIssue creates an issue and returns it.
 func CreateIssue(input map[string]any) (*Issue, error) {
 	q := fmt.Sprintf(`mutation($input: IssueCreateInput!) {
