@@ -13,6 +13,10 @@ type Config struct {
 }
 
 func dir() (string, error) {
+	// Explicit override, mainly for tests but also lets users relocate config.
+	if d := os.Getenv("LINEAR_CLI_CONFIG_DIR"); d != "" {
+		return d, nil
+	}
 	base, err := os.UserConfigDir()
 	if err != nil {
 		return "", err

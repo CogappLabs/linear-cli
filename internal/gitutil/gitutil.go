@@ -19,12 +19,18 @@ func CurrentBranch() string {
 	return strings.TrimSpace(string(out))
 }
 
-// IssueIDFromBranch extracts an ABC-123 style identifier from the current
-// branch name, upper-cased. Returns "" if none found.
-func IssueIDFromBranch() string {
-	m := identifierRe.FindString(CurrentBranch())
+// identifierFromBranch extracts an ABC-123 style identifier from a branch name,
+// upper-cased. Returns "" if none found.
+func identifierFromBranch(branch string) string {
+	m := identifierRe.FindString(branch)
 	if m == "" {
 		return ""
 	}
 	return strings.ToUpper(m)
+}
+
+// IssueIDFromBranch extracts an ABC-123 style identifier from the current
+// branch name, upper-cased. Returns "" if none found.
+func IssueIDFromBranch() string {
+	return identifierFromBranch(CurrentBranch())
 }

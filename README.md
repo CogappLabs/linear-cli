@@ -256,6 +256,7 @@ query/mutation, so the CLI cannot cover them. Use the MCP server:
 
 ```bash
 go build -o linear ./cmd/linear
+go test ./...
 go vet ./...
 gofmt -l .          # should print nothing
 

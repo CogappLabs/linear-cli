@@ -34,6 +34,7 @@ Go CLI for Linear. Wraps the Linear GraphQL API for issues, teams, and users fro
 - Personal API key from linear.app/settings/account/security.
 - Header is the raw key: `Authorization: <API_KEY>` — no `Bearer`/`Basic` prefix.
 - Resolution order: `LINEAR_API_KEY` env (incl. loaded `.env`) → `~/.config/linear-cli/config.json`.
+- `LINEAR_CLI_CONFIG_DIR` overrides the config directory (tests set it to a temp dir so they never touch the real config; `os.UserConfigDir()` ignores `XDG_CONFIG_HOME` on macOS, so an explicit override is the reliable way to isolate).
 - `linear auth login` verifies the key with a `viewer` query before saving.
 
 ## GraphQL schema notes
@@ -76,7 +77,15 @@ writes. Field names came from the Linear SDK schema at
 `~/git/linear/packages/sdk/src/schema.graphql` (more reliable than live
 introspection, which the sandbox blocks via `.env`).
 
-## Release (planned)
+## Tests
+
+`go test ./...`. Unit tests cover pure logic only, no network: `buildIssueFilter`
+(filter shaping), `identifierFromBranch` (branch parsing), `format` helpers,
+the markdown image regex, and config save/load + key resolution. Command
+`Action`s and GraphQL wrappers are exercised by hand against the live API (writes
+go to the `LUKE` team). CI runs gofmt, vet, build, and test on Linux.
+
+## Release
 
 Follow colflow: GoReleaser on `v*` tag → GitHub release (darwin/linux × amd64/arm64) → updates `CogappLabs/homebrew-tap`. Not yet wired.
 
