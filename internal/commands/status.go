@@ -10,7 +10,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewStatus registers `linear status list` and `linear status view`.
+// NewStatus registers the `linear-cli status` command group.
 func NewStatus() *cli.Command {
 	return &cli.Command{
 		Name:  "status",

@@ -81,7 +81,7 @@ func issuePull() *cli.Command {
 				}
 			}
 			if teamKey == "" {
-				return fmt.Errorf("no team — pass --team KEY or set a default team")
+				return fmt.Errorf("no team. Pass --team KEY or set a default team")
 			}
 
 			f := client.IssueFilter{

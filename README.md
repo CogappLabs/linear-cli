@@ -10,12 +10,19 @@ one file per command).
 
 ## Install
 
+Once the tap is published:
+
 ```bash
-go build -o linear ./cmd/linear
-# then move `linear` onto your PATH
+brew tap CogappLabs/tap
+brew install linear-cli
 ```
 
-Homebrew tap + GoReleaser are planned (see Release below), not yet wired.
+Or build from source:
+
+```bash
+go build -o linear-cli ./cmd/linear
+# then move `linear-cli` onto your PATH
+```
 
 ## Authentication
 
@@ -23,7 +30,7 @@ Create a personal API key at
 `linear.app/settings/account/security`, then either:
 
 ```bash
-linear auth login        # prompts, verifies, saves to ~/.config/linear-cli/config.json
+linear-cli auth login        # prompts, verifies, saves to ~/.config/linear-cli/config.json
 ```
 
 or set `LINEAR_API_KEY` in your environment. A project `.env` / `.env.local`
@@ -37,57 +44,57 @@ The key is sent as the raw `Authorization` header (Linear does not use a
 ## Commands (implemented)
 
 ```bash
-linear auth login|status
-linear whoami [--json]
+linear-cli auth login|status
+linear-cli whoami [--json]
 
-linear issue list [-t KEY] [--mine] [-s STATE_TYPE ...] [--not-done] [-n N] [--all] [--json]
-linear issue pull -t KEY [-s STATE_TYPE ...] [--not-done] [-o out.parquet | --json]
-linear issue view [ID] [--comments] [--json]
-linear issue create -T TITLE [-t KEY] [-d DESC] [-a EMAIL|me] [-p 0-4] [--json]
-linear issue update [ID] [-T TITLE] [-d DESC] [-s STATE_NAME] [-a EMAIL|me] [-p 0-4] [--json]
-linear issue start [ID] [--json]
-linear issue comment [ID] -b BODY
-linear issue comment-edit COMMENT_ID -b BODY
-linear issue comment-delete COMMENT_ID
-linear issue url [ID]
-linear issue branch [ID]
+linear-cli issue list [-t KEY] [--mine] [-s STATE_TYPE ...] [--not-done] [-n N] [--all] [--json]
+linear-cli issue pull -t KEY [-s STATE_TYPE ...] [--not-done] [-o out.parquet | --json]
+linear-cli issue view [ID] [--comments] [--json]
+linear-cli issue create -T TITLE [-t KEY] [-d DESC] [-a EMAIL|me] [-p 0-4] [--json]
+linear-cli issue update [ID] [-T TITLE] [-d DESC] [-s STATE_NAME] [-a EMAIL|me] [-p 0-4] [--json]
+linear-cli issue start [ID] [--json]
+linear-cli issue comment [ID] -b BODY
+linear-cli issue comment-edit COMMENT_ID -b BODY
+linear-cli issue comment-delete COMMENT_ID
+linear-cli issue url [ID]
+linear-cli issue branch [ID]
 
-linear team list [--json]
-linear team view KEY [--json]
-linear user list [--all] [--json]
-linear user view EMAIL [--json]
+linear-cli team list [--json]
+linear-cli team view KEY [--json]
+linear-cli user list [--all] [--json]
+linear-cli user view EMAIL [--json]
 
-linear project list [-t KEY] [--json]
-linear project view ID [--json]
-linear project save [ID] --name NAME [-t KEY] [-d DESC] [--target-date YYYY-MM-DD] [--json]
-linear milestone list -p PROJECT_ID [--json]
-linear milestone view ID [--json]
-linear milestone save [ID] --name NAME [-p PROJECT_ID] [-d DESC] [--target-date YYYY-MM-DD] [--json]
-linear cycle list -t KEY [--json]
-linear label list [-t KEY] [--json]
-linear label create -t KEY --name NAME [--color HEX] [--description D] [--json]
-linear document list [--json]
-linear document view ID [--json]
-linear document save [ID] -T TITLE [-c CONTENT] [-t KEY | -p PROJECT_ID] [--json]
+linear-cli project list [-t KEY] [--json]
+linear-cli project view ID [--json]
+linear-cli project save [ID] --name NAME [-t KEY] [-d DESC] [--target-date YYYY-MM-DD] [--json]
+linear-cli milestone list -p PROJECT_ID [--json]
+linear-cli milestone view ID [--json]
+linear-cli milestone save [ID] --name NAME [-p PROJECT_ID] [-d DESC] [--target-date YYYY-MM-DD] [--json]
+linear-cli cycle list -t KEY [--json]
+linear-cli label list [-t KEY] [--json]
+linear-cli label create -t KEY --name NAME [--color HEX] [--description D] [--json]
+linear-cli document list [--json]
+linear-cli document view ID [--json]
+linear-cli document save [ID] -T TITLE [-c CONTENT] [-t KEY | -p PROJECT_ID] [--json]
 
-linear status list -t KEY [--json]
-linear status view -t KEY NAME [--json]
-linear attachment list ISSUE [--json]
-linear attachment add ISSUE URL [--title T] [--json]
-linear attachment upload ISSUE FILE [--title T] [--json]
-linear attachment extract-images ISSUE [--json]
-linear attachment delete ATTACHMENT_ID
-linear release list [--json]
-linear release view ID [--json]
-linear release notes RELEASE_ID [--json]
-linear status-update list -p PROJECT_ID [--json]
-linear status-update create -p PROJECT_ID -b BODY [--health onTrack|atRisk|offTrack] [--json]
-linear status-update delete ID
-linear agent-skill list [--json]
-linear agent-skill view ID [--json]
+linear-cli status list -t KEY [--json]
+linear-cli status view -t KEY NAME [--json]
+linear-cli attachment list ISSUE [--json]
+linear-cli attachment add ISSUE URL [--title T] [--json]
+linear-cli attachment upload ISSUE FILE [--title T] [--json]
+linear-cli attachment extract-images ISSUE [--json]
+linear-cli attachment delete ATTACHMENT_ID
+linear-cli release list [--json]
+linear-cli release view ID [--json]
+linear-cli release notes RELEASE_ID [--json]
+linear-cli status-update list -p PROJECT_ID [--json]
+linear-cli status-update create -p PROJECT_ID -b BODY [--health onTrack|atRisk|offTrack] [--json]
+linear-cli status-update delete ID
+linear-cli agent-skill list [--json]
+linear-cli agent-skill view ID [--json]
 
-linear config set-team KEY
-linear config show
+linear-cli config set-team KEY
+linear-cli config show
 ```
 
 `[ID]` is optional on single-issue commands; when omitted the CLI reads an
@@ -99,9 +106,9 @@ linear config show
 not one page) and can write it to a Parquet file:
 
 ```bash
-linear issue pull -t ENG --not-done -o eng-open.parquet   # everything not completed/canceled
-linear issue pull -t ENG -s started -s unstarted --json   # multiple statuses, JSON to stdout
-linear issue pull -t ENG                                    # table to stdout
+linear-cli issue pull -t ENG --not-done -o eng-open.parquet   # everything not completed/canceled
+linear-cli issue pull -t ENG -s started -s unstarted --json   # multiple statuses, JSON to stdout
+linear-cli issue pull -t ENG                                    # table to stdout
 ```
 
 Parquet is written with the pure-Go `parquet-go` writer (no CGO, no duckdb
@@ -110,7 +117,7 @@ priority, labels, url, created_at, updated_at, description. Query it with
 duckdb: `duckdb -c "SELECT state_type, count(*) FROM 'eng-open.parquet' GROUP BY 1"`.
 
 Flag conventions:
-- `-t/--team` = team **key** (e.g. `ENG`). `linear config set-team ENG` sets a default.
+- `-t/--team` = team **key** (e.g. `ENG`). `linear-cli config set-team ENG` sets a default.
 - `-s/--state` on `update` = state **name** (`"In Review"`); on `list` = state **type** (`started`, `unstarted`, `completed`, `canceled`, `backlog`, `triage`).
 - `-a/--assignee` = `me` or an email.
 - `-p/--priority` = `0 none, 1 urgent, 2 high, 3 medium, 4 low`.
@@ -126,12 +133,12 @@ tail, fall back to the MCP server (see the parity table below).
 
 ## MCP parity
 
-Every Linear MCP tool, its planned CLI command, and current status. Linear's MCP
+Every Linear MCP tool, the matching CLI command, and its status. Linear's MCP
 uses a `save_*` upsert pattern (create when no id, update when id present); the
 CLI mirrors that with a `save` subcommand where it makes sense, or splits into
 `create`/`update`.
 
-Status: ✅ built · 🟡 next wave · ⚪ later.
+Status: ✅ built · 🟡 not built (buildable) · ⚪ not planned.
 
 ### Issues
 | MCP tool | CLI | Status |
@@ -154,12 +161,6 @@ Status: ✅ built · 🟡 next wave · ⚪ later.
 | `get_team` | `team view KEY` | ✅ |
 | `list_users` | `user list` | ✅ |
 | `get_user` | `user view EMAIL` | ✅ |
-
-### Issue statuses (workflow states)
-| MCP tool | CLI | Status |
-|---|---|---|
-| `list_issue_statuses` | `status list -t KEY` | 🟡 |
-| `get_issue_status` | `status view -t KEY NAME` | 🟡 |
 
 ### Labels
 | MCP tool | CLI | Status |
@@ -216,7 +217,7 @@ Status: ✅ built · 🟡 next wave · ⚪ later.
 | `list_releases` | `release list` | ✅ |
 | `get_release` | `release view ID` | ✅ |
 | `list_release_notes` | `release notes RELEASE_ID` | ✅ |
-| `get_release_note` / `save_release*` / `list_release_pipelines` | — | ⚪ |
+| `get_release_note` / `save_release*` / `list_release_pipelines` | n/a | ⚪ |
 
 ### Status updates (project updates)
 | MCP tool | CLI | Status |
@@ -255,7 +256,7 @@ query/mutation, so the CLI cannot cover them. Use the MCP server:
 ## Development
 
 ```bash
-go build -o linear ./cmd/linear
+go build -o linear-cli ./cmd/linear
 go test ./...
 go vet ./...
 gofmt -l .          # should print nothing
@@ -266,7 +267,9 @@ gofmt -l .          # should print nothing
 
 Architecture and GraphQL notes are in `CLAUDE.md`.
 
-## Release (planned)
+## Release
 
-GoReleaser on a `v*` tag → GitHub release (darwin/linux × amd64/arm64) →
-updates `CogappLabs/homebrew-tap`, matching `colflow-cli`.
+Push a `v*` tag. GoReleaser builds darwin/linux amd64+arm64, publishes a GitHub
+release, and updates the `CogappLabs/homebrew-tap` formula (via the
+`TAP_GITHUB_TOKEN` repo secret). Config in `.goreleaser.yaml`, workflow in
+`.github/workflows/release.yml`. Mirrors `colflow-cli`.

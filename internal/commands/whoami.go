@@ -8,7 +8,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewWhoami registers `linear whoami`.
+// NewWhoami registers the `linear-cli whoami` command.
 func NewWhoami() *cli.Command {
 	return &cli.Command{
 		Name:  "whoami",

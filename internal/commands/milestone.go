@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewMilestone registers `linear milestone …`.
+// NewMilestone registers the `linear-cli milestone` command group.
 func NewMilestone() *cli.Command {
 	return &cli.Command{
 		Name:  "milestone",
@@ -66,7 +66,7 @@ func milestoneSave() *cli.Command {
 				m, err = client.CreateMilestone(input)
 			} else {
 				if len(input) == 0 {
-					return fmt.Errorf("nothing to update — pass at least one field flag")
+					return fmt.Errorf("nothing to update. Pass at least one field flag")
 				}
 				m, err = client.UpdateMilestone(id, input)
 			}

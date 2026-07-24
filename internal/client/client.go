@@ -38,7 +38,7 @@ type gqlResp struct {
 // `data` object into out.
 func Query(gql string, variables map[string]any, out any) error {
 	if apiKey == "" {
-		return errors.New("no Linear API key set — run `linear auth login` or set LINEAR_API_KEY")
+		return errors.New("no Linear API key set. Run `linear-cli auth login` or set LINEAR_API_KEY")
 	}
 
 	body, _ := json.Marshal(map[string]any{
@@ -75,7 +75,7 @@ func Query(gql string, variables map[string]any, out any) error {
 	}
 
 	if res.StatusCode == 401 || res.StatusCode == 403 {
-		return errors.New("authentication failed — check your API key (401/403)")
+		return errors.New("authentication failed. Check your API key (401/403)")
 	}
 	if res.StatusCode >= 400 {
 		return fmt.Errorf("Linear request failed: %d %s", res.StatusCode, res.Status)

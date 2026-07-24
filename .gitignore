@@ -1,5 +1,7 @@
+/linear-cli
 /linear
 *.jsonl
+*.parquet
 .env
 .env.local
 dist/

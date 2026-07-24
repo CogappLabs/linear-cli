@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewAttachment registers `linear attachment …`.
+// NewAttachment registers the `linear-cli attachment` command group.
 func NewAttachment() *cli.Command {
 	return &cli.Command{
 		Name:  "attachment",

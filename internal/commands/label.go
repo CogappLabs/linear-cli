@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewLabel registers `linear label …`.
+// NewLabel registers the `linear-cli label` command group.
 func NewLabel() *cli.Command {
 	return &cli.Command{
 		Name:  "label",

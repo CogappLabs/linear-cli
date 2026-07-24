@@ -12,7 +12,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewIssue registers `linear issue …`.
+// NewIssue registers the `linear-cli issue` command group.
 func NewIssue() *cli.Command {
 	return &cli.Command{
 		Name:    "issue",

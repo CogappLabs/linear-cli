@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewTeam registers `linear team list`.
+// NewTeam registers the `linear-cli team` command group.
 func NewTeam() *cli.Command {
 	return &cli.Command{
 		Name:  "team",
@@ -47,7 +47,7 @@ func NewTeam() *cli.Command {
 						return err
 					}
 					if c.Args().Len() != 1 {
-						return fmt.Errorf("usage: linear team view KEY")
+						return fmt.Errorf("usage: linear-cli team view KEY")
 					}
 					t, err := client.GetTeam(c.Args().First())
 					if err != nil {

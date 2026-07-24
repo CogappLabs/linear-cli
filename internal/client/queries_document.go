@@ -3,7 +3,7 @@ package client
 import "fmt"
 
 // documentListFields is the selection set for a document in list results.
-// Excludes content, which can be large — fetched only by GetDocument.
+// Excludes content, which can be large; fetched only by GetDocument.
 const documentListFields = `
 	id
 	title

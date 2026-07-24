@@ -4,19 +4,19 @@ Go CLI for Linear. Wraps the Linear GraphQL API for issues, teams, and users fro
 
 ## Architecture
 
-- `cmd/linear/main.go` — root urfave/cli/v3 command, registers subcommands. Calls `config.LoadDotEnv()` at startup.
-- `internal/client/` — Linear GraphQL client. `client.go` is transport (`Query()`), `queries.go` per-operation wrappers, `types.go` response shapes. All API access goes through `Query()`.
-- `internal/config/` — API key + default team persisted to `~/.config/linear-cli/config.json` (0600). `ResolveAPIKey` prefers `LINEAR_API_KEY` env over the file. `dotenv.go` walks up from cwd loading `.env`/`.env.local` so a project key is picked up (OS env wins).
-- `internal/format/` — terminal output helpers (colour, `ColorState`, `Priority`, `TimeAgo`, ANSI-aware `PadRight`).
-- `internal/gitutil/` — extracts an `ABC-123` identifier from the current git branch (`IssueIDFromBranch`), for commands that default to "the issue I'm working on".
-- `internal/commands/` — one file per command group, each returning `*cli.Command`. `common.go` has `requireAuth()` (loads the key into the client), `printJSON`, `die`.
+- `cmd/linear/main.go`: root urfave/cli/v3 command, registers subcommands. Calls `config.LoadDotEnv()` at startup.
+- `internal/client/`: Linear GraphQL client. `client.go` is transport (`Query()`), `queries.go` per-operation wrappers, `types.go` response shapes. All API access goes through `Query()`.
+- `internal/config/`: API key + default team persisted to `~/.config/linear-cli/config.json` (0600). `ResolveAPIKey` prefers `LINEAR_API_KEY` env over the file. `dotenv.go` walks up from cwd loading `.env`/`.env.local` so a project key is picked up (OS env wins).
+- `internal/format/`: terminal output helpers (colour, `ColorState`, `Priority`, `TimeAgo`, ANSI-aware `PadRight`).
+- `internal/gitutil/`: extracts an `ABC-123` identifier from the current git branch (`IssueIDFromBranch`), for commands that default to "the issue I'm working on".
+- `internal/commands/`: one file per command group, each returning `*cli.Command`. `common.go` has `requireAuth()` (loads the key into the client), `printJSON`, `die`.
 
 ## Conventions
 
 - urfave/cli/v3. Every command that hits the API calls `requireAuth()` first thing in its `Action`.
 - Every read command supports `--json` (raw struct dump). Human output is the default.
 - Commands that act on a single issue (`view`, `update`, `start`, `comment`, `url`, `branch`) take an optional `[ID]` arg; when omitted they fall back to `gitutil.IssueIDFromBranch()`.
-- Issue identifiers (`ABC-123`) are passed straight to the API — `issue(id:)`, `issueUpdate(id:)` accept them. Only `commentCreate` needs the issue UUID, so `issue comment` resolves the identifier to a UUID via `GetIssue` first.
+- Issue identifiers (`ABC-123`) are passed straight to the API. `issue(id:)` and `issueUpdate(id:)` accept them. Only `commentCreate` needs the issue UUID, so `issue comment` resolves the identifier to a UUID via `GetIssue` first.
 - State names and assignee emails are resolved to ids client-side (`resolveStateID`, `resolveUserID`) because the mutations want ids. `--assignee me` and state-by-name are the ergonomic path.
 
 ## Adding a new command
@@ -26,23 +26,23 @@ Go CLI for Linear. Wraps the Linear GraphQL API for issues, teams, and users fro
 3. Add a `--json` flag and honour it for read commands.
 4. Add any new GraphQL wrapper to `internal/client/queries.go`, not inline in the command.
 5. Register in `cmd/linear/main.go` (top-level) or the group's `Commands` slice.
-6. Build: `go build -o linear ./cmd/linear`.
+6. Build: `go build -o linear-cli ./cmd/linear`.
 7. Update `README.md` and this file if the command surface or file layout changed.
 
 ## Authentication
 
 - Personal API key from linear.app/settings/account/security.
-- Header is the raw key: `Authorization: <API_KEY>` — no `Bearer`/`Basic` prefix.
+- Header is the raw key: `Authorization: <API_KEY>` (no `Bearer`/`Basic` prefix).
 - Resolution order: `LINEAR_API_KEY` env (incl. loaded `.env`) → `~/.config/linear-cli/config.json`.
 - `LINEAR_CLI_CONFIG_DIR` overrides the config directory (tests set it to a temp dir so they never touch the real config; `os.UserConfigDir()` ignores `XDG_CONFIG_HOME` on macOS, so an explicit override is the reliable way to isolate).
-- `linear auth login` verifies the key with a `viewer` query before saving.
+- `linear-cli auth login` verifies the key with a `viewer` query before saving.
 
 ## GraphQL schema notes
 
 Endpoint: `https://api.linear.app/graphql`. Introspect with `scripts/introspect.sh` (reads `LINEAR_API_KEY`; pass type names, defaults to the core set).
 
 - `issue(id: String!)` accepts either the identifier (`ABC-123`) or the UUID.
-- `issues(filter: IssueFilter, first: Int, orderBy: updatedAt)` — filter is nested comparators, e.g. `{ team: { key: { eq: "ENG" } }, assignee: { id: { eq: "<uuid>" } }, state: { type: { eq: "started" } } }`.
+- `issues(filter: IssueFilter, first: Int, orderBy: updatedAt)`: filter is nested comparators, e.g. `{ team: { key: { eq: "ENG" } }, assignee: { id: { eq: "<uuid>" } }, state: { type: { eq: "started" } } }`.
 - Connections wrap lists as `{ nodes { … }, pageInfo { hasNextPage endCursor } }`. Current commands take the first page only; add cursor paging when a list needs it.
 - `IssueCreateInput` requires `teamId`; useful optional fields: `title`, `description` (markdown), `assigneeId`, `stateId`, `priority` (0-4), `labelIds`, `projectId`, `projectMilestoneId`, `parentId`, `dueDate` (TimelessDate), `cycleId`.
 - `IssueUpdateInput` mirrors those (no `teamId` needed; the issue already has a team).
@@ -87,7 +87,7 @@ go to the `LUKE` team). CI runs gofmt, vet, build, and test on Linux.
 
 ## Release
 
-Follow colflow: GoReleaser on `v*` tag → GitHub release (darwin/linux × amd64/arm64) → updates `CogappLabs/homebrew-tap`. Not yet wired.
+GoReleaser on a `v*` tag builds darwin/linux amd64+arm64, publishes a GitHub release, and updates `CogappLabs/homebrew-tap` (needs the `TAP_GITHUB_TOKEN` secret). Config in `.goreleaser.yaml`, workflow in `.github/workflows/release.yml`. Mirrors colflow.
 
 ## Command file layout
 
@@ -115,9 +115,10 @@ the existing `<domain>.go` / `issue_mutate.go` files; their client wrappers were
 added to the matching `queries_*.go`.
 
 Shared `queries.go` holds issues, teams, users, states, and the `ListUsers`
-pagination helper. `ListUsers` pages through the full connection (250/page) —
-the workspace has >50 members, so a single page silently truncates. Anything
-resolving a user by email (`GetUser`, `resolveUserID`) depends on that.
+pagination helper. `ListUsers` pages through the full connection (250/page)
+because the workspace has more than 50 members, so a single page would drop
+the rest. Anything resolving a user by email (`GetUser`, `resolveUserID`)
+depends on that.
 
 ## Available commands
 

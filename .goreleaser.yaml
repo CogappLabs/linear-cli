@@ -1,15 +1,15 @@
 version: 2
 
-project_name: linear
+project_name: linear-cli
 
 before:
   hooks:
     - go mod tidy
 
 builds:
-  - id: linear
+  - id: linear-cli
     main: ./cmd/linear
-    binary: linear
+    binary: linear-cli
     env:
       - CGO_ENABLED=0
     goos:
@@ -22,7 +22,7 @@ builds:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
 
 archives:
-  - id: linear
+  - id: linear-cli
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     formats: [tar.gz]
     files:
@@ -46,7 +46,7 @@ changelog:
       - "Merge branch"
 
 brews:
-  - name: linear
+  - name: linear-cli
     repository:
       owner: CogappLabs
       name: homebrew-tap
@@ -57,9 +57,9 @@ brews:
     description: "CLI for Linear: issues, projects, comments, attachments, bulk pull to Parquet"
     license: "MIT"
     install: |
-      bin.install "linear"
+      bin.install "linear-cli"
     test: |
-      system "#{bin}/linear", "--version"
+      system "#{bin}/linear-cli", "--version"
 
 release:
   github:

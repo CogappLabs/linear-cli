@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewRelease registers `linear release …`.
+// NewRelease registers the `linear-cli release` command group.
 func NewRelease() *cli.Command {
 	return &cli.Command{
 		Name:  "release",

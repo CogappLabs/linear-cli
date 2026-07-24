@@ -3,7 +3,7 @@ package client
 import "fmt"
 
 // agentSkillListFields is the selection set for an agent skill in list results.
-// Excludes body, which can be large — fetched only by GetAgentSkill.
+// Excludes body, which can be large; fetched only by GetAgentSkill.
 const agentSkillListFields = `
 	id
 	title

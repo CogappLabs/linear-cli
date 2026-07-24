@@ -13,7 +13,7 @@ import (
 func requireAuth() error {
 	key := config.ResolveAPIKey()
 	if key == "" {
-		return fmt.Errorf("no API key — run `linear auth login` or set LINEAR_API_KEY")
+		return fmt.Errorf("no API key. Run `linear-cli auth login` or set LINEAR_API_KEY")
 	}
 	client.SetAPIKey(key)
 	return nil

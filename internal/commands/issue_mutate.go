@@ -37,7 +37,7 @@ func issueCreate() *cli.Command {
 				}
 			}
 			if teamKey == "" {
-				return fmt.Errorf("no team — pass --team KEY or set a default team")
+				return fmt.Errorf("no team. Pass --team KEY or set a default team")
 			}
 			team, err := client.TeamByKey(teamKey)
 			if err != nil {
@@ -131,7 +131,7 @@ func issueUpdate() *cli.Command {
 				input["stateId"] = sid
 			}
 			if len(input) == 0 {
-				return fmt.Errorf("nothing to update — pass at least one field flag")
+				return fmt.Errorf("nothing to update. Pass at least one field flag")
 			}
 
 			is, err := client.UpdateIssue(id, input)
@@ -244,7 +244,7 @@ func issueCommentEdit() *cli.Command {
 				return err
 			}
 			if c.Args().Len() != 1 {
-				return fmt.Errorf("usage: linear issue comment-edit COMMENT_ID --body TEXT")
+				return fmt.Errorf("usage: linear-cli issue comment-edit COMMENT_ID --body TEXT")
 			}
 			body := c.String("body")
 			if body == "" {
@@ -269,7 +269,7 @@ func issueCommentDelete() *cli.Command {
 				return err
 			}
 			if c.Args().Len() != 1 {
-				return fmt.Errorf("usage: linear issue comment-delete COMMENT_ID")
+				return fmt.Errorf("usage: linear-cli issue comment-delete COMMENT_ID")
 			}
 			if err := client.DeleteComment(c.Args().First()); err != nil {
 				return err

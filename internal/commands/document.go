@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewDocument registers `linear document …`.
+// NewDocument registers the `linear-cli document` command group.
 func NewDocument() *cli.Command {
 	return &cli.Command{
 		Name:  "document",
@@ -73,7 +73,7 @@ func documentSave() *cli.Command {
 				d, err = client.CreateDocument(input)
 			} else {
 				if len(input) == 0 {
-					return fmt.Errorf("nothing to update — pass at least one field flag")
+					return fmt.Errorf("nothing to update. Pass at least one field flag")
 				}
 				d, err = client.UpdateDocument(id, input)
 			}

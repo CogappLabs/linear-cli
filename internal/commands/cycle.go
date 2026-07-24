@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewCycle registers `linear cycle list`.
+// NewCycle registers the `linear-cli cycle` command group.
 func NewCycle() *cli.Command {
 	return &cli.Command{
 		Name:  "cycle",

@@ -22,8 +22,8 @@ func main() {
 	config.LoadDotEnv()
 
 	app := &cli.Command{
-		Name:            "linear",
-		Usage:           "Linear CLI — issues, teams, and users from the terminal",
+		Name:            "linear-cli",
+		Usage:           "Linear CLI: issues, projects, comments, and more from the terminal",
 		Version:         fmt.Sprintf("%s (%s, %s)", version, commit, date),
 		HideHelpCommand: true,
 		Commands: []*cli.Command{

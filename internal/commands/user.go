@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewUser registers `linear user list`.
+// NewUser registers the `linear-cli user` command group.
 func NewUser() *cli.Command {
 	return &cli.Command{
 		Name:  "user",
@@ -57,7 +57,7 @@ func NewUser() *cli.Command {
 						return err
 					}
 					if c.Args().Len() != 1 {
-						return fmt.Errorf("usage: linear user view EMAIL")
+						return fmt.Errorf("usage: linear-cli user view EMAIL")
 					}
 					u, err := client.GetUser(c.Args().First())
 					if err != nil {

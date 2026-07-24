@@ -8,7 +8,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewConfig registers `linear config set-team|show`.
+// NewConfig registers the `linear-cli config` command group.
 func NewConfig() *cli.Command {
 	return &cli.Command{
 		Name:  "config",
@@ -20,7 +20,7 @@ func NewConfig() *cli.Command {
 				ArgsUsage: "KEY",
 				Action: func(_ context.Context, c *cli.Command) error {
 					if c.Args().Len() != 1 {
-						return fmt.Errorf("usage: linear config set-team KEY")
+						return fmt.Errorf("usage: linear-cli config set-team KEY")
 					}
 					cfg, err := config.Load()
 					if err != nil {

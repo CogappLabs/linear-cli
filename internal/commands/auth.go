@@ -12,7 +12,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewAuth registers `linear auth login|status`.
+// NewAuth registers the `linear-cli auth` command group.
 func NewAuth() *cli.Command {
 	return &cli.Command{
 		Name:  "auth",

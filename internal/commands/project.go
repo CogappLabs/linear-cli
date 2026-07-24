@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewProject registers `linear project …`.
+// NewProject registers the `linear-cli project` command group.
 func NewProject() *cli.Command {
 	return &cli.Command{
 		Name:  "project",
@@ -71,7 +71,7 @@ func projectSave() *cli.Command {
 				p, err = client.CreateProject(input)
 			} else {
 				if len(input) == 0 {
-					return fmt.Errorf("nothing to update — pass at least one field flag")
+					return fmt.Errorf("nothing to update. Pass at least one field flag")
 				}
 				p, err = client.UpdateProject(id, input)
 			}

@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// NewAgentSkill registers `linear agent-skill …`.
+// NewAgentSkill registers the `linear-cli agent-skill` command group.
 func NewAgentSkill() *cli.Command {
 	return &cli.Command{
 		Name:  "agent-skill",
