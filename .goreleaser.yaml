@@ -1,0 +1,69 @@
+version: 2
+
+project_name: linear
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: linear
+    main: ./cmd/linear
+    binary: linear
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+archives:
+  - id: linear
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    files:
+      - README.md
+      - LICENSE*
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "Merge pull request"
+      - "Merge branch"
+
+brews:
+  - name: linear
+    repository:
+      owner: CogappLabs
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/CogappLabs/linear-cli"
+    description: "CLI for Linear: issues, projects, comments, attachments, bulk pull to Parquet"
+    license: "MIT"
+    install: |
+      bin.install "linear"
+    test: |
+      system "#{bin}/linear", "--version"
+
+release:
+  github:
+    owner: CogappLabs
+    name: linear-cli
+  draft: false
+  prerelease: auto
