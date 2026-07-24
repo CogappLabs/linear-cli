@@ -51,7 +51,7 @@ type Issue struct {
 		Nodes []Label `json:"nodes"`
 	} `json:"labels"`
 	Comments struct {
-		Nodes []Comment `json:"comments"`
+		Nodes []Comment `json:"nodes"`
 	} `json:"comments"`
 }
 
