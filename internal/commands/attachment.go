@@ -17,7 +17,81 @@ func NewAttachment() *cli.Command {
 		Commands: []*cli.Command{
 			attachmentList(),
 			attachmentAdd(),
+			attachmentUpload(),
 			attachmentDelete(),
+			attachmentExtractImages(),
+		},
+	}
+}
+
+func attachmentUpload() *cli.Command {
+	return &cli.Command{
+		Name:      "upload",
+		Usage:     "Upload a local file and attach it to an issue",
+		ArgsUsage: "ISSUE FILE",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "title", Usage: "Attachment title (default: filename)"},
+			&cli.BoolFlag{Name: "json"},
+		},
+		Action: func(_ context.Context, c *cli.Command) error {
+			if err := requireAuth(); err != nil {
+				return err
+			}
+			if c.Args().Len() != 2 {
+				return fmt.Errorf("ISSUE and FILE are required")
+			}
+			issueArg := c.Args().Get(0)
+			path := c.Args().Get(1)
+
+			// attachmentCreate needs the issue UUID, not the identifier.
+			issue, err := client.GetIssue(issueArg)
+			if err != nil {
+				return err
+			}
+			if issue.ID == "" {
+				return fmt.Errorf("issue %s not found", issueArg)
+			}
+
+			attachment, err := client.UploadAndAttach(issue.ID, path, c.String("title"))
+			if err != nil {
+				return err
+			}
+			if c.Bool("json") {
+				printJSON(attachment)
+				return nil
+			}
+			fmt.Printf("Uploaded %s to %s\n", path, issue.Identifier)
+			return nil
+		},
+	}
+}
+
+func attachmentExtractImages() *cli.Command {
+	return &cli.Command{
+		Name:      "extract-images",
+		Usage:     "Print image URLs embedded in an issue's description",
+		ArgsUsage: "ISSUE",
+		Flags:     []cli.Flag{&cli.BoolFlag{Name: "json"}},
+		Action: func(_ context.Context, c *cli.Command) error {
+			if err := requireAuth(); err != nil {
+				return err
+			}
+			issue := c.Args().First()
+			if issue == "" {
+				return fmt.Errorf("ISSUE is required")
+			}
+			urls, err := client.ExtractImages(issue)
+			if err != nil {
+				return err
+			}
+			if c.Bool("json") {
+				printJSON(urls)
+				return nil
+			}
+			for _, u := range urls {
+				fmt.Println(u)
+			}
+			return nil
 		},
 	}
 }

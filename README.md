@@ -74,6 +74,8 @@ linear status list -t KEY [--json]
 linear status view -t KEY NAME [--json]
 linear attachment list ISSUE [--json]
 linear attachment add ISSUE URL [--title T] [--json]
+linear attachment upload ISSUE FILE [--title T] [--json]
+linear attachment extract-images ISSUE [--json]
 linear attachment delete ATTACHMENT_ID
 linear release list [--json]
 linear release view ID [--json]
@@ -204,9 +206,9 @@ Status: ✅ built · 🟡 next wave · ⚪ later.
 | `get_attachment` / `list` | `attachment list ISSUE` | ✅ |
 | `create_attachment` | `attachment add ISSUE URL --title …` (via `attachmentLinkURL`) | ✅ |
 | `delete_attachment` | `attachment delete ID` | ✅ |
-| `create_attachment_from_upload` | `attachment upload ISSUE FILE` | ⚪ (file-upload flow) |
-| `prepare_attachment_upload` | (internal to upload) | ⚪ |
-| `extract_images` | `attachment extract-images ISSUE` | ⚪ |
+| `create_attachment_from_upload` | `attachment upload ISSUE FILE` | ✅ |
+| `prepare_attachment_upload` | (internal to `attachment upload`) | ✅ |
+| `extract_images` | `attachment extract-images ISSUE` | ✅ |
 
 ### Releases
 | MCP tool | CLI | Status |
