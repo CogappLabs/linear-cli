@@ -10,12 +10,12 @@ one file per command).
 
 ## Install
 
-Once the tap is published:
-
 ```bash
-brew tap CogappLabs/tap
-brew install linear-cli
+brew install CogappLabs/tap/linear-cli
 ```
+
+Use the tap-qualified name. A bare `brew install linear-cli` resolves to
+unrelated core formulae (`linode-cli`, the `linear` cask).
 
 Or build from source:
 
@@ -26,17 +26,25 @@ go build -o linear-cli ./cmd/linear
 
 ## Authentication
 
-Create a personal API key at
-`linear.app/settings/account/security`, then either:
+Create a personal API key at `linear.app/settings/account/security`.
+
+For a Homebrew install (the binary runs from any directory), store the key once:
 
 ```bash
-linear-cli auth login        # prompts, verifies, saves to ~/.config/linear-cli/config.json
+linear-cli auth login    # prompts, verifies, saves to the config file
 ```
 
-or set `LINEAR_API_KEY` in your environment. A project `.env` / `.env.local`
-containing `LINEAR_API_KEY` is loaded automatically (the CLI walks up from the
-current directory). OS environment variables take precedence over the config
-file.
+The key is saved to `~/Library/Application Support/linear-cli/config.json` on
+macOS (`~/.config/linear-cli/config.json` on Linux) and used from anywhere.
+
+Resolution order, highest first:
+1. `LINEAR_API_KEY` already in the environment (set it in your shell profile for
+   a global key).
+2. `LINEAR_API_KEY` from a `.env` / `.env.local` in the current directory or any
+   parent (a real shell variable takes precedence over the file). Per-project
+   convenience: it only applies when you run the CLI inside that tree, so it
+   does not replace `auth login` for a Homebrew install.
+3. The config file written by `auth login`.
 
 The key is sent as the raw `Authorization` header (Linear does not use a
 `Bearer`/`Basic` prefix for personal keys).
