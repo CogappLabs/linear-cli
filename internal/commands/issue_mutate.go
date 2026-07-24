@@ -231,6 +231,55 @@ func issueComment() *cli.Command {
 	}
 }
 
+func issueCommentEdit() *cli.Command {
+	return &cli.Command{
+		Name:      "comment-edit",
+		Usage:     "Edit a comment by its comment id",
+		ArgsUsage: "COMMENT_ID --body TEXT",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "body", Aliases: []string{"b"}, Usage: "New comment body (required)"},
+		},
+		Action: func(_ context.Context, c *cli.Command) error {
+			if err := requireAuth(); err != nil {
+				return err
+			}
+			if c.Args().Len() != 1 {
+				return fmt.Errorf("usage: linear issue comment-edit COMMENT_ID --body TEXT")
+			}
+			body := c.String("body")
+			if body == "" {
+				return fmt.Errorf("--body is required")
+			}
+			if err := client.EditComment(c.Args().First(), body); err != nil {
+				return err
+			}
+			fmt.Println("Comment updated")
+			return nil
+		},
+	}
+}
+
+func issueCommentDelete() *cli.Command {
+	return &cli.Command{
+		Name:      "comment-delete",
+		Usage:     "Delete a comment by its comment id",
+		ArgsUsage: "COMMENT_ID",
+		Action: func(_ context.Context, c *cli.Command) error {
+			if err := requireAuth(); err != nil {
+				return err
+			}
+			if c.Args().Len() != 1 {
+				return fmt.Errorf("usage: linear issue comment-delete COMMENT_ID")
+			}
+			if err := client.DeleteComment(c.Args().First()); err != nil {
+				return err
+			}
+			fmt.Printf("Deleted comment %s\n", c.Args().First())
+			return nil
+		},
+	}
+}
+
 // resolveUserID maps "me" or an email to a user UUID.
 func resolveUserID(spec string) (string, error) {
 	if spec == "me" {

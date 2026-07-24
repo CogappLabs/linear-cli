@@ -55,6 +55,46 @@ func ListMilestones(projectID string) ([]Milestone, error) {
 	return out.ProjectMilestones.Nodes, nil
 }
 
+// CreateMilestone creates a milestone. input needs projectId and name.
+func CreateMilestone(input map[string]any) (*Milestone, error) {
+	q := fmt.Sprintf(`mutation($input: ProjectMilestoneCreateInput!) {
+		projectMilestoneCreate(input: $input) { success projectMilestone { %s } }
+	}`, milestoneFields)
+	var out struct {
+		ProjectMilestoneCreate struct {
+			Success          bool      `json:"success"`
+			ProjectMilestone Milestone `json:"projectMilestone"`
+		} `json:"projectMilestoneCreate"`
+	}
+	if err := Query(q, map[string]any{"input": input}, &out); err != nil {
+		return nil, err
+	}
+	if !out.ProjectMilestoneCreate.Success {
+		return nil, fmt.Errorf("projectMilestoneCreate reported failure")
+	}
+	return &out.ProjectMilestoneCreate.ProjectMilestone, nil
+}
+
+// UpdateMilestone applies input to an existing milestone.
+func UpdateMilestone(id string, input map[string]any) (*Milestone, error) {
+	q := fmt.Sprintf(`mutation($id: String!, $input: ProjectMilestoneUpdateInput!) {
+		projectMilestoneUpdate(id: $id, input: $input) { success projectMilestone { %s } }
+	}`, milestoneFields)
+	var out struct {
+		ProjectMilestoneUpdate struct {
+			Success          bool      `json:"success"`
+			ProjectMilestone Milestone `json:"projectMilestone"`
+		} `json:"projectMilestoneUpdate"`
+	}
+	if err := Query(q, map[string]any{"id": id, "input": input}, &out); err != nil {
+		return nil, err
+	}
+	if !out.ProjectMilestoneUpdate.Success {
+		return nil, fmt.Errorf("projectMilestoneUpdate reported failure")
+	}
+	return &out.ProjectMilestoneUpdate.ProjectMilestone, nil
+}
+
 // GetMilestone fetches one project milestone by id.
 func GetMilestone(id string) (*Milestone, error) {
 	q := fmt.Sprintf(`query($id: String!) {

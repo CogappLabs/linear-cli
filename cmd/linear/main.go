@@ -37,6 +37,11 @@ func main() {
 			commands.NewCycle(),
 			commands.NewLabel(),
 			commands.NewDocument(),
+			commands.NewStatus(),
+			commands.NewAttachment(),
+			commands.NewRelease(),
+			commands.NewStatusUpdate(),
+			commands.NewAgentSkill(),
 			commands.NewConfig(),
 		},
 	}

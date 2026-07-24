@@ -55,13 +55,15 @@ func GetIssue(id string) (*Issue, error) {
 // IssueFilter carries optional list filters. Empty fields are omitted.
 type IssueFilter struct {
 	TeamKey    string
-	AssigneeID string // "me" resolved by caller
-	StateType  string // e.g. "started", "unstarted", "completed"
-	First      int
+	AssigneeID string   // "me" resolved by caller
+	StateTypes []string // matched with `in`; a single value still works
+	NotDone    bool     // exclude completed/canceled (overrides StateTypes)
+	First      int      // page size / cap; ignored when All is set
+	All        bool     // page through every match
 }
 
-// ListIssues returns issues matching the filter, newest updated first.
-func ListIssues(f IssueFilter) ([]Issue, error) {
+// buildIssueFilter renders an IssueFilter into the GraphQL filter object.
+func buildIssueFilter(f IssueFilter) map[string]any {
 	filter := map[string]any{}
 	if f.TeamKey != "" {
 		filter["team"] = map[string]any{"key": map[string]any{"eq": f.TeamKey}}
@@ -69,28 +71,55 @@ func ListIssues(f IssueFilter) ([]Issue, error) {
 	if f.AssigneeID != "" {
 		filter["assignee"] = map[string]any{"id": map[string]any{"eq": f.AssigneeID}}
 	}
-	if f.StateType != "" {
-		filter["state"] = map[string]any{"type": map[string]any{"eq": f.StateType}}
+	switch {
+	case f.NotDone:
+		filter["state"] = map[string]any{"type": map[string]any{"nin": []string{"completed", "canceled"}}}
+	case len(f.StateTypes) > 0:
+		filter["state"] = map[string]any{"type": map[string]any{"in": f.StateTypes}}
 	}
-	first := f.First
-	if first <= 0 {
-		first = 50
-	}
+	return filter
+}
 
-	q := fmt.Sprintf(`query($filter: IssueFilter, $first: Int!) {
-		issues(filter: $filter, first: $first, orderBy: updatedAt) {
+// ListIssues returns issues matching the filter, newest updated first. When
+// f.All is set it pages through the entire result; otherwise it returns a
+// single page of f.First (default 50).
+func ListIssues(f IssueFilter) ([]Issue, error) {
+	filter := buildIssueFilter(f)
+
+	q := fmt.Sprintf(`query($filter: IssueFilter, $first: Int!, $after: String) {
+		issues(filter: $filter, first: $first, after: $after, orderBy: updatedAt) {
 			nodes { %s }
 			pageInfo { hasNextPage endCursor }
 		}
 	}`, issueFields)
 
-	var out struct {
-		Issues issueConnection `json:"issues"`
+	pageSize := f.First
+	if pageSize <= 0 || (f.All && pageSize > 250) {
+		pageSize = 50
 	}
-	if err := Query(q, map[string]any{"filter": filter, "first": first}, &out); err != nil {
-		return nil, err
+	if f.All {
+		pageSize = 250 // fewer round-trips for a full pull
 	}
-	return out.Issues.Nodes, nil
+
+	var all []Issue
+	var after string
+	for {
+		var out struct {
+			Issues issueConnection `json:"issues"`
+		}
+		vars := map[string]any{"filter": filter, "first": pageSize}
+		if after != "" {
+			vars["after"] = after
+		}
+		if err := Query(q, vars, &out); err != nil {
+			return nil, err
+		}
+		all = append(all, out.Issues.Nodes...)
+		if !f.All || !out.Issues.PageInfo.HasNextPage {
+			return all, nil
+		}
+		after = out.Issues.PageInfo.EndCursor
+	}
 }
 
 // CreateIssue creates an issue and returns it.
@@ -155,6 +184,43 @@ func AddComment(issueID, body string) error {
 	}
 	if !out.CommentCreate.Success {
 		return fmt.Errorf("commentCreate reported failure")
+	}
+	return nil
+}
+
+// EditComment replaces the body of a comment (by comment UUID).
+func EditComment(commentID, body string) error {
+	q := `mutation($id: String!, $input: CommentUpdateInput!) {
+		commentUpdate(id: $id, input: $input) { success }
+	}`
+	var out struct {
+		CommentUpdate struct {
+			Success bool `json:"success"`
+		} `json:"commentUpdate"`
+	}
+	vars := map[string]any{"id": commentID, "input": map[string]any{"body": body}}
+	if err := Query(q, vars, &out); err != nil {
+		return err
+	}
+	if !out.CommentUpdate.Success {
+		return fmt.Errorf("commentUpdate reported failure")
+	}
+	return nil
+}
+
+// DeleteComment removes a comment (by comment UUID).
+func DeleteComment(commentID string) error {
+	q := `mutation($id: String!) { commentDelete(id: $id) { success } }`
+	var out struct {
+		CommentDelete struct {
+			Success bool `json:"success"`
+		} `json:"commentDelete"`
+	}
+	if err := Query(q, map[string]any{"id": commentID}, &out); err != nil {
+		return err
+	}
+	if !out.CommentDelete.Success {
+		return fmt.Errorf("commentDelete reported failure")
 	}
 	return nil
 }

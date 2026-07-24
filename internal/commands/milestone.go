@@ -17,6 +17,68 @@ func NewMilestone() *cli.Command {
 		Commands: []*cli.Command{
 			milestoneList(),
 			milestoneView(),
+			milestoneSave(),
+		},
+	}
+}
+
+func milestoneSave() *cli.Command {
+	return &cli.Command{
+		Name:      "save",
+		Usage:     "Create a milestone (no ID) or update one (with ID)",
+		ArgsUsage: "[ID]",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "name", Usage: "Milestone name (required to create)"},
+			&cli.StringFlag{Name: "description", Aliases: []string{"d"}},
+			&cli.StringFlag{Name: "project", Aliases: []string{"p"}, Usage: "Project UUID (required to create)"},
+			&cli.StringFlag{Name: "target-date", Usage: "Target date (YYYY-MM-DD)"},
+			&cli.BoolFlag{Name: "json"},
+		},
+		Action: func(_ context.Context, c *cli.Command) error {
+			if err := requireAuth(); err != nil {
+				return err
+			}
+			input := map[string]any{}
+			if v := c.String("name"); v != "" {
+				input["name"] = v
+			}
+			if v := c.String("description"); v != "" {
+				input["description"] = v
+			}
+			if v := c.String("target-date"); v != "" {
+				input["targetDate"] = v
+			}
+
+			id := c.Args().First()
+			var (
+				m   *client.Milestone
+				err error
+			)
+			if id == "" {
+				if _, ok := input["name"]; !ok {
+					return fmt.Errorf("--name is required to create a milestone")
+				}
+				proj := c.String("project")
+				if proj == "" {
+					return fmt.Errorf("--project is required to create a milestone")
+				}
+				input["projectId"] = proj
+				m, err = client.CreateMilestone(input)
+			} else {
+				if len(input) == 0 {
+					return fmt.Errorf("nothing to update — pass at least one field flag")
+				}
+				m, err = client.UpdateMilestone(id, input)
+			}
+			if err != nil {
+				return err
+			}
+			if c.Bool("json") {
+				printJSON(m)
+				return nil
+			}
+			fmt.Printf("Saved milestone %s\n", m.Name)
+			return nil
 		},
 	}
 }

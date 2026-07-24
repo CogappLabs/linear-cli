@@ -66,6 +66,46 @@ func ListDocuments() ([]Document, error) {
 	return out.Documents.Nodes, nil
 }
 
+// CreateDocument creates a document. input needs title, plus teamId or projectId.
+func CreateDocument(input map[string]any) (*Document, error) {
+	q := fmt.Sprintf(`mutation($input: DocumentCreateInput!) {
+		documentCreate(input: $input) { success document { %s } }
+	}`, documentFields)
+	var out struct {
+		DocumentCreate struct {
+			Success  bool     `json:"success"`
+			Document Document `json:"document"`
+		} `json:"documentCreate"`
+	}
+	if err := Query(q, map[string]any{"input": input}, &out); err != nil {
+		return nil, err
+	}
+	if !out.DocumentCreate.Success {
+		return nil, fmt.Errorf("documentCreate reported failure")
+	}
+	return &out.DocumentCreate.Document, nil
+}
+
+// UpdateDocument applies input to an existing document.
+func UpdateDocument(id string, input map[string]any) (*Document, error) {
+	q := fmt.Sprintf(`mutation($id: String!, $input: DocumentUpdateInput!) {
+		documentUpdate(id: $id, input: $input) { success document { %s } }
+	}`, documentFields)
+	var out struct {
+		DocumentUpdate struct {
+			Success  bool     `json:"success"`
+			Document Document `json:"document"`
+		} `json:"documentUpdate"`
+	}
+	if err := Query(q, map[string]any{"id": id, "input": input}, &out); err != nil {
+		return nil, err
+	}
+	if !out.DocumentUpdate.Success {
+		return nil, fmt.Errorf("documentUpdate reported failure")
+	}
+	return &out.DocumentUpdate.Document, nil
+}
+
 // GetDocument fetches one document by id or slug id, including its content.
 func GetDocument(id string) (*Document, error) {
 	q := fmt.Sprintf(`query($id: String!) {

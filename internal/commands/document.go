@@ -17,6 +17,75 @@ func NewDocument() *cli.Command {
 		Commands: []*cli.Command{
 			documentList(),
 			documentView(),
+			documentSave(),
+		},
+	}
+}
+
+func documentSave() *cli.Command {
+	return &cli.Command{
+		Name:      "save",
+		Usage:     "Create a document (no ID) or update one (with ID)",
+		ArgsUsage: "[ID]",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "title", Aliases: []string{"T"}, Usage: "Document title (required to create)"},
+			&cli.StringFlag{Name: "content", Aliases: []string{"c"}, Usage: "Markdown content"},
+			&cli.StringFlag{Name: "team", Aliases: []string{"t"}, Usage: "Team key (create: team or project required)"},
+			&cli.StringFlag{Name: "project", Aliases: []string{"p"}, Usage: "Project UUID (create: team or project required)"},
+			&cli.BoolFlag{Name: "json"},
+		},
+		Action: func(_ context.Context, c *cli.Command) error {
+			if err := requireAuth(); err != nil {
+				return err
+			}
+			input := map[string]any{}
+			if v := c.String("title"); v != "" {
+				input["title"] = v
+			}
+			if v := c.String("content"); v != "" {
+				input["content"] = v
+			}
+
+			id := c.Args().First()
+			var (
+				d   *client.Document
+				err error
+			)
+			if id == "" {
+				if _, ok := input["title"]; !ok {
+					return fmt.Errorf("--title is required to create a document")
+				}
+				team := c.String("team")
+				proj := c.String("project")
+				if team == "" && proj == "" {
+					return fmt.Errorf("create needs --team KEY or --project UUID")
+				}
+				if team != "" {
+					t, terr := client.TeamByKey(team)
+					if terr != nil {
+						return terr
+					}
+					input["teamId"] = t.ID
+				}
+				if proj != "" {
+					input["projectId"] = proj
+				}
+				d, err = client.CreateDocument(input)
+			} else {
+				if len(input) == 0 {
+					return fmt.Errorf("nothing to update — pass at least one field flag")
+				}
+				d, err = client.UpdateDocument(id, input)
+			}
+			if err != nil {
+				return err
+			}
+			if c.Bool("json") {
+				printJSON(d)
+				return nil
+			}
+			fmt.Printf("Saved document %s\n%s\n", d.Title, d.URL)
+			return nil
 		},
 	}
 }

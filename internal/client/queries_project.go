@@ -67,6 +67,46 @@ func ListProjects(teamKey string) ([]Project, error) {
 	return out.Projects.Nodes, nil
 }
 
+// CreateProject creates a project. input needs teamIds ([]string) and name.
+func CreateProject(input map[string]any) (*Project, error) {
+	q := fmt.Sprintf(`mutation($input: ProjectCreateInput!) {
+		projectCreate(input: $input) { success project { %s } }
+	}`, projectFields)
+	var out struct {
+		ProjectCreate struct {
+			Success bool    `json:"success"`
+			Project Project `json:"project"`
+		} `json:"projectCreate"`
+	}
+	if err := Query(q, map[string]any{"input": input}, &out); err != nil {
+		return nil, err
+	}
+	if !out.ProjectCreate.Success {
+		return nil, fmt.Errorf("projectCreate reported failure")
+	}
+	return &out.ProjectCreate.Project, nil
+}
+
+// UpdateProject applies input to an existing project.
+func UpdateProject(id string, input map[string]any) (*Project, error) {
+	q := fmt.Sprintf(`mutation($id: String!, $input: ProjectUpdateInput!) {
+		projectUpdate(id: $id, input: $input) { success project { %s } }
+	}`, projectFields)
+	var out struct {
+		ProjectUpdate struct {
+			Success bool    `json:"success"`
+			Project Project `json:"project"`
+		} `json:"projectUpdate"`
+	}
+	if err := Query(q, map[string]any{"id": id, "input": input}, &out); err != nil {
+		return nil, err
+	}
+	if !out.ProjectUpdate.Success {
+		return nil, fmt.Errorf("projectUpdate reported failure")
+	}
+	return &out.ProjectUpdate.Project, nil
+}
+
 // GetProject fetches one project by id or slug id.
 func GetProject(id string) (*Project, error) {
 	q := fmt.Sprintf(`query($id: String!) {

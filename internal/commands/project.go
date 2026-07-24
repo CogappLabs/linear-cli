@@ -17,6 +17,73 @@ func NewProject() *cli.Command {
 		Commands: []*cli.Command{
 			projectList(),
 			projectView(),
+			projectSave(),
+		},
+	}
+}
+
+func projectSave() *cli.Command {
+	return &cli.Command{
+		Name:      "save",
+		Usage:     "Create a project (no ID) or update one (with ID)",
+		ArgsUsage: "[ID]",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "name", Usage: "Project name (required to create)"},
+			&cli.StringFlag{Name: "description", Aliases: []string{"d"}},
+			&cli.StringFlag{Name: "team", Aliases: []string{"t"}, Usage: "Team key (required to create)"},
+			&cli.StringFlag{Name: "target-date", Usage: "Target date (YYYY-MM-DD)"},
+			&cli.BoolFlag{Name: "json"},
+		},
+		Action: func(_ context.Context, c *cli.Command) error {
+			if err := requireAuth(); err != nil {
+				return err
+			}
+			input := map[string]any{}
+			if v := c.String("name"); v != "" {
+				input["name"] = v
+			}
+			if v := c.String("description"); v != "" {
+				input["description"] = v
+			}
+			if v := c.String("target-date"); v != "" {
+				input["targetDate"] = v
+			}
+
+			id := c.Args().First()
+			var (
+				p   *client.Project
+				err error
+			)
+			if id == "" {
+				// Create path.
+				if _, ok := input["name"]; !ok {
+					return fmt.Errorf("--name is required to create a project")
+				}
+				teamKey := c.String("team")
+				if teamKey == "" {
+					return fmt.Errorf("--team is required to create a project")
+				}
+				team, terr := client.TeamByKey(teamKey)
+				if terr != nil {
+					return terr
+				}
+				input["teamIds"] = []string{team.ID}
+				p, err = client.CreateProject(input)
+			} else {
+				if len(input) == 0 {
+					return fmt.Errorf("nothing to update — pass at least one field flag")
+				}
+				p, err = client.UpdateProject(id, input)
+			}
+			if err != nil {
+				return err
+			}
+			if c.Bool("json") {
+				printJSON(p)
+				return nil
+			}
+			fmt.Printf("Saved project %s\n%s\n", p.Name, p.URL)
+			return nil
 		},
 	}
 }

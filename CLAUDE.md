@@ -50,9 +50,31 @@ Endpoint: `https://api.linear.app/graphql`. Introspect with `scripts/introspect.
 - `commentCreate(input: CommentCreateInput)` needs `issueId` as the UUID plus `body` (markdown).
 - Mutations return `{ success, <entity> }`; wrappers error when `success` is false.
 
-## Linear MCP parity (roadmap)
+## Bulk pull + Parquet
 
-The Linear MCP server exposes a wider surface we may want as commands. Mapping of MCP tool → planned CLI command lives in `README.md` under "Roadmap". Not yet built: projects, milestones, cycles, labels, documents, attachments, diffs/reviews, releases, status updates. The GraphQL types for these were introspected (see `scripts/introspect.sh`).
+`issue pull` (`issue_pull.go`) fetches a whole team via `ListIssues` with
+`All: true`, which pages the connection (250/page) until exhausted. It flattens
+each issue to `issueRow` and writes Parquet with `parquet.NewGenericWriter`
+(pure Go, no CGO). Nested objects are flattened to scalar columns; labels are
+comma-joined. `--parquet/-o` writes the file, else `--json` or a table.
+
+Multi-status filtering lives in `buildIssueFilter`: `--state` (repeatable) →
+`state.type.in`; `--not-done` → `state.type.nin ["completed","canceled"]`
+(overrides `--state`). Shared by `issue list` and `issue pull`.
+
+## Linear MCP parity
+
+Full MCP-tool → CLI mapping with status is in `README.md`. Built: issues (incl.
+bulk pull), comments (+ edit/delete), teams, users, projects (+ save),
+milestones (+ save), cycles, labels (+ create), documents (+ save), statuses,
+attachments (list/add/delete), releases (list/view/notes), status updates
+(project updates), agent skills.
+
+MCP-only (no public-schema backing, cannot build): code diffs & review,
+docs search. Also unbuilt: attachment file uploads, release-note/pipeline
+writes. Field names came from the Linear SDK schema at
+`~/git/linear/packages/sdk/src/schema.graphql` (more reliable than live
+introspection, which the sandbox blocks via `.env`).
 
 ## Release (planned)
 
@@ -65,14 +87,23 @@ commands live in their own files, and their GraphQL wrappers live in
 `internal/client/queries_<domain>.go` (not the shared `queries.go`) so they can
 be added independently:
 
-- `issue.go` + `issue_mutate.go` + `issue_comments.go`
+- `issue.go` + `issue_mutate.go` + `issue_comments.go` + `issue_pull.go`
 - `team.go`, `user.go` (list + view)
-- `project.go` (+ `queries_project.go`)
-- `milestone.go` (+ `queries_milestone.go`)
+- `project.go` (+ `queries_project.go`, list/view/save)
+- `milestone.go` (+ `queries_milestone.go`, list/view/save)
 - `cycle.go` (+ `queries_cycle.go`)
 - `label.go` (+ `queries_label.go`, list + create)
-- `document.go` (+ `queries_document.go`)
+- `document.go` (+ `queries_document.go`, list/view/save)
+- `status.go` (+ `queries_status.go`, workflow states)
+- `attachment.go` (+ `queries_attachment.go`, list/add/delete)
+- `release.go` (+ `queries_release.go`, list/view/notes)
+- `statusupdate.go` (+ `queries_statusupdate.go`, project updates)
+- `agentskill.go` (+ `queries_agentskill.go`)
 - `config.go`
+
+`save` subcommands (project/milestone/document) and comment edit/delete are in
+the existing `<domain>.go` / `issue_mutate.go` files; their client wrappers were
+added to the matching `queries_*.go`.
 
 Shared `queries.go` holds issues, teams, users, states, and the `ListUsers`
 pagination helper. `ListUsers` pages through the full connection (250/page) —
@@ -81,4 +112,4 @@ resolving a user by email (`GetUser`, `resolveUserID`) depends on that.
 
 ## Available commands
 
-`auth login|status`, `whoami`, `issue list|view|create|update|start|comment|comments|url|branch`, `team list|view`, `user list|view`, `project list|view`, `milestone list|view`, `cycle list`, `label list|create`, `document list|view`, `config set-team|show`.
+`auth login|status`, `whoami`, `issue list|pull|view|create|update|start|comment|comments|comment-edit|comment-delete|url|branch`, `team list|view`, `user list|view`, `project list|view|save`, `milestone list|view|save`, `cycle list`, `label list|create`, `document list|view|save`, `status list|view`, `attachment list|add|delete`, `release list|view|notes`, `status-update list|create|delete`, `agent-skill list|view`, `config set-team|show`.
