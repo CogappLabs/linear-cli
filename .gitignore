@@ -1,0 +1,5 @@
+/linear
+*.jsonl
+.env
+.env.local
+dist/
