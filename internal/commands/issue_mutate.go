@@ -20,6 +20,7 @@ func issueCreate() *cli.Command {
 			&cli.StringFlag{Name: "team", Aliases: []string{"t"}, Usage: "Team key (default: config defaultTeam)"},
 			&cli.StringFlag{Name: "assignee", Aliases: []string{"a"}, Usage: "Assignee email, or 'me'"},
 			&cli.IntFlag{Name: "priority", Aliases: []string{"p"}, Usage: "0=none 1=urgent 2=high 3=medium 4=low"},
+			&cli.StringSliceFlag{Name: "label", Aliases: []string{"l"}, Usage: "Label name (repeatable)"},
 			&cli.BoolFlag{Name: "json"},
 		},
 		Action: func(_ context.Context, c *cli.Command) error {
@@ -61,6 +62,13 @@ func issueCreate() *cli.Command {
 				}
 				input["assigneeId"] = uid
 			}
+			if names := c.StringSlice("label"); len(names) > 0 {
+				ids, err := resolveLabelIDs(team.ID, names)
+				if err != nil {
+					return err
+				}
+				input["labelIds"] = ids
+			}
 
 			is, err := client.CreateIssue(input)
 			if err != nil {
@@ -87,6 +95,8 @@ func issueUpdate() *cli.Command {
 			&cli.StringFlag{Name: "state", Aliases: []string{"s"}, Usage: "Workflow state name (e.g. 'In Progress')"},
 			&cli.StringFlag{Name: "assignee", Aliases: []string{"a"}, Usage: "Assignee email, or 'me'"},
 			&cli.IntFlag{Name: "priority", Aliases: []string{"p"}},
+			&cli.StringSliceFlag{Name: "label", Aliases: []string{"l"}, Usage: "Label name to add (repeatable)"},
+			&cli.StringSliceFlag{Name: "remove-label", Usage: "Label name to remove (repeatable)"},
 			&cli.BoolFlag{Name: "json"},
 		},
 		Action: func(_ context.Context, c *cli.Command) error {
@@ -115,8 +125,9 @@ func issueUpdate() *cli.Command {
 				}
 				input["assigneeId"] = uid
 			}
-			if s := c.String("state"); s != "" {
-				// Need the issue's team to resolve the state name to an id.
+			add, remove := c.StringSlice("label"), c.StringSlice("remove-label")
+			if s := c.String("state"); s != "" || len(add) > 0 || len(remove) > 0 {
+				// State and label names resolve to ids within the issue's team.
 				cur, err := client.GetIssue(id)
 				if err != nil {
 					return err
@@ -124,11 +135,27 @@ func issueUpdate() *cli.Command {
 				if cur.Team == nil {
 					return fmt.Errorf("could not determine team for %s", id)
 				}
-				sid, err := resolveStateID(cur.Team.ID, s)
-				if err != nil {
-					return err
+				if s != "" {
+					sid, err := resolveStateID(cur.Team.ID, s)
+					if err != nil {
+						return err
+					}
+					input["stateId"] = sid
 				}
-				input["stateId"] = sid
+				if len(add) > 0 {
+					ids, err := resolveLabelIDs(cur.Team.ID, add)
+					if err != nil {
+						return err
+					}
+					input["addedLabelIds"] = ids
+				}
+				if len(remove) > 0 {
+					ids, err := resolveLabelIDs(cur.Team.ID, remove)
+					if err != nil {
+						return err
+					}
+					input["removedLabelIds"] = ids
+				}
 			}
 			if len(input) == 0 {
 				return fmt.Errorf("nothing to update. Pass at least one field flag")
@@ -313,6 +340,29 @@ func resolveStateID(teamID, name string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("no state named %q in this team", name)
+}
+
+// resolveLabelIDs maps label names (case-insensitive) to ids usable in a team.
+func resolveLabelIDs(teamID string, names []string) ([]string, error) {
+	labels, err := client.TeamUsableLabels(teamID)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]string, 0, len(names))
+	for _, n := range names {
+		found := false
+		for _, l := range labels {
+			if !l.IsGroup && strings.EqualFold(l.Name, n) {
+				ids = append(ids, l.ID)
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, fmt.Errorf("no label named %q in this team", n)
+		}
+	}
+	return ids, nil
 }
 
 // firstStateOfType returns the id of the first state matching a type.

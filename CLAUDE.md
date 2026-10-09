@@ -17,7 +17,7 @@ Go CLI for Linear. Wraps the Linear GraphQL API for issues, teams, and users fro
 - Every read command supports `--json` (raw struct dump). Human output is the default.
 - Commands that act on a single issue (`view`, `update`, `start`, `comment`, `url`, `branch`) take an optional `[ID]` arg; when omitted they fall back to `gitutil.IssueIDFromBranch()`.
 - Issue identifiers (`ABC-123`) are passed straight to the API. `issue(id:)` and `issueUpdate(id:)` accept them. Only `commentCreate` needs the issue UUID, so `issue comment` resolves the identifier to a UUID via `GetIssue` first.
-- State names and assignee emails are resolved to ids client-side (`resolveStateID`, `resolveUserID`) because the mutations want ids. `--assignee me` and state-by-name are the ergonomic path.
+- State names, label names and assignee emails are resolved to ids client-side (`resolveStateID`, `resolveLabelIDs`, `resolveUserID`) because the mutations want ids. Labels match the team's own plus workspace labels; `issue update -l` adds via `addedLabelIds` rather than replacing. `--assignee me` and state-by-name are the ergonomic path.
 
 ## Adding a new command
 

@@ -58,8 +58,8 @@ linear-cli whoami [--json]
 linear-cli issue list [-t KEY] [--mine] [-s STATE_TYPE_OR_NAME ...] [--not-done] [-n N] [--all] [--json]
 linear-cli issue pull -t KEY [-s STATE_TYPE_OR_NAME ...] [--not-done] [-o out.parquet | --json]
 linear-cli issue view [ID] [--comments] [--json]
-linear-cli issue create -T TITLE [-t KEY] [-d DESC] [-a EMAIL|me] [-p 0-4] [--json]
-linear-cli issue update [ID] [-T TITLE] [-d DESC] [-s STATE_NAME] [-a EMAIL|me] [-p 0-4] [--json]
+linear-cli issue create -T TITLE [-t KEY] [-d DESC] [-a EMAIL|me] [-p 0-4] [-l LABEL ...] [--json]
+linear-cli issue update [ID] [-T TITLE] [-d DESC] [-s STATE_NAME] [-a EMAIL|me] [-p 0-4] [-l LABEL ...] [--remove-label LABEL ...] [--json]
 linear-cli issue start [ID] [--json]
 linear-cli issue comment [ID] -b BODY
 linear-cli issue comment-edit COMMENT_ID -b BODY
