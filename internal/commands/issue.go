@@ -31,6 +31,8 @@ func NewIssue() *cli.Command {
 			issueCommentDelete(),
 			issueURL(),
 			issueBranch(),
+			issueRelate(),
+			issueUnrelate(),
 		},
 	}
 }
@@ -173,6 +175,7 @@ func renderIssue(is *client.Issue, withComments bool) {
 	if is.Description != "" {
 		fmt.Printf("\n%s\n", is.Description)
 	}
+	renderRelations(is)
 	if withComments && len(is.Comments.Nodes) > 0 {
 		fmt.Printf("\n%s\n", format.Bold("Comments"))
 		for _, cm := range is.Comments.Nodes {

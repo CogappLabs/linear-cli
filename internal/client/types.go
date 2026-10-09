@@ -53,6 +53,27 @@ type Issue struct {
 	Comments struct {
 		Nodes []Comment `json:"nodes"`
 	} `json:"comments"`
+	Relations struct {
+		Nodes []Relation `json:"nodes"`
+	} `json:"relations"`
+	InverseRelations struct {
+		Nodes []Relation `json:"nodes"`
+	} `json:"inverseRelations"`
+}
+
+// Relation is one IssueRelation edge: Issue <Type> RelatedIssue
+// (e.g. Issue blocks RelatedIssue).
+type Relation struct {
+	ID           string    `json:"id"`
+	Type         string    `json:"type"`
+	Issue        *RelIssue `json:"issue"`
+	RelatedIssue *RelIssue `json:"relatedIssue"`
+}
+
+type RelIssue struct {
+	ID         string `json:"id"`
+	Identifier string `json:"identifier"`
+	Title      string `json:"title"`
 }
 
 type issueConnection struct {

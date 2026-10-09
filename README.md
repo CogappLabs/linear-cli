@@ -66,6 +66,8 @@ linear-cli issue comment-edit COMMENT_ID -b BODY
 linear-cli issue comment-delete COMMENT_ID
 linear-cli issue url [ID]
 linear-cli issue branch [ID]
+linear-cli issue relate ID OTHER-ID [--type related|blocks|blocked-by|duplicate]
+linear-cli issue unrelate ID OTHER-ID
 
 linear-cli team list [--json]
 linear-cli team view KEY [--json]
@@ -154,6 +156,7 @@ Status: ✅ built · 🟡 not built (buildable) · ⚪ not planned.
 | `get_issue` | `issue view [ID]` | ✅ |
 | `list_issues` | `issue list` | ✅ |
 | `save_issue` | `issue create` / `issue update` / `issue start` | ✅ |
+| `save_issue` (relations) | `issue relate ID OTHER-ID --type ...` / `issue unrelate ID OTHER-ID`; relations shown in `issue view` | ✅ |
 
 ### Comments
 | MCP tool | CLI | Status |

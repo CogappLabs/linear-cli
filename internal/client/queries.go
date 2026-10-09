@@ -41,8 +41,10 @@ func GetIssue(id string) (*Issue, error) {
 		issue(id: $id) {
 			%s
 			comments { nodes { id body createdAt user { name displayName } } }
+			relations(first: 100) { nodes { %[2]s } }
+			inverseRelations(first: 100) { nodes { %[2]s } }
 		}
-	}`, issueFields)
+	}`, issueFields, relationFields)
 	var out struct {
 		Issue Issue `json:"issue"`
 	}
