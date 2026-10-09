@@ -54,3 +54,26 @@ func TestMarkdownImageRe(t *testing.T) {
 		t.Errorf("captured URLs wrong: %v", matches)
 	}
 }
+
+func TestBuildStateFilter(t *testing.T) {
+	t.Run("name becomes eqIgnoreCase", func(t *testing.T) {
+		got := buildStateFilter([]string{"Review"})
+		want := map[string]any{"or": []any{
+			map[string]any{"name": map[string]any{"eqIgnoreCase": "Review"}},
+		}}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+
+	t.Run("types and names mix", func(t *testing.T) {
+		got := buildStateFilter([]string{"Started", "Review"})
+		want := map[string]any{"or": []any{
+			map[string]any{"name": map[string]any{"eqIgnoreCase": "Review"}},
+			map[string]any{"type": map[string]any{"in": []string{"started"}}},
+		}}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+}

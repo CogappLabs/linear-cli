@@ -46,6 +46,7 @@ Endpoint: `https://api.linear.app/graphql`. Introspect with `scripts/introspect.
 - Connections wrap lists as `{ nodes { … }, pageInfo { hasNextPage endCursor } }`. Current commands take the first page only; add cursor paging when a list needs it.
 - `IssueCreateInput` requires `teamId`; useful optional fields: `title`, `description` (markdown), `assigneeId`, `stateId`, `priority` (0-4), `labelIds`, `projectId`, `projectMilestoneId`, `parentId`, `dueDate` (TimelessDate), `cycleId`.
 - `IssueUpdateInput` mirrors those (no `teamId` needed; the issue already has a team).
+- `issue list/pull -s` values that are not a state type are matched as workflow state names (`eqIgnoreCase`), see `buildStateFilter`.
 - `priority` is `0 none, 1 urgent, 2 high, 3 medium, 4 low` (`format.Priority`).
 - `WorkflowState.type` is one of `triage, backlog, unstarted, started, completed, canceled`. `issue start` picks the first `started` state for the team.
 - `commentCreate(input: CommentCreateInput)` needs `issueId` as the UUID plus `body` (markdown).

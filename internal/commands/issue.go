@@ -54,7 +54,7 @@ func issueList() *cli.Command {
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "team", Aliases: []string{"t"}, Usage: "Team key (default: config defaultTeam)"},
 			&cli.BoolFlag{Name: "mine", Aliases: []string{"m"}, Usage: "Only issues assigned to me"},
-			&cli.StringSliceFlag{Name: "state", Aliases: []string{"s"}, Usage: "State type (repeatable): backlog|unstarted|started|completed|canceled|triage|duplicate"},
+			&cli.StringSliceFlag{Name: "state", Aliases: []string{"s"}, Usage: "State type or name (repeatable): backlog|unstarted|started|completed|canceled|triage|duplicate, or e.g. Review"},
 			&cli.BoolFlag{Name: "not-done", Usage: "Exclude completed/canceled (overrides --state)"},
 			&cli.IntFlag{Name: "limit", Aliases: []string{"n"}, Value: 50, Usage: "Max results (ignored with --all)"},
 			&cli.BoolFlag{Name: "all", Usage: "Fetch every match, paging through all results"},

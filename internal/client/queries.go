@@ -56,7 +56,7 @@ func GetIssue(id string) (*Issue, error) {
 type IssueFilter struct {
 	TeamKey    string
 	AssigneeID string   // "me" resolved by caller
-	StateTypes []string // matched with `in`; a single value still works
+	StateTypes []string // state types, or state names (case-insensitive) for anything that is not a type
 	NotDone    bool     // exclude completed/canceled (overrides StateTypes)
 	First      int      // page size / cap; ignored when All is set
 	All        bool     // page through every match
@@ -75,9 +75,36 @@ func buildIssueFilter(f IssueFilter) map[string]any {
 	case f.NotDone:
 		filter["state"] = map[string]any{"type": map[string]any{"nin": []string{"completed", "canceled"}}}
 	case len(f.StateTypes) > 0:
-		filter["state"] = map[string]any{"type": map[string]any{"in": f.StateTypes}}
+		filter["state"] = buildStateFilter(f.StateTypes)
 	}
 	return filter
+}
+
+var stateTypes = map[string]bool{
+	"triage": true, "backlog": true, "unstarted": true, "started": true,
+	"completed": true, "canceled": true, "duplicate": true,
+}
+
+// buildStateFilter treats each value as a state type when it is one, and as a
+// workflow state name otherwise. Teams name their states freely ("Review"),
+// and those names are not types, so a type-only filter matched nothing.
+func buildStateFilter(values []string) map[string]any {
+	var types []string
+	var clauses []any
+	for _, v := range values {
+		if stateTypes[strings.ToLower(v)] {
+			types = append(types, strings.ToLower(v))
+		} else {
+			clauses = append(clauses, map[string]any{"name": map[string]any{"eqIgnoreCase": v}})
+		}
+	}
+	if len(clauses) == 0 {
+		return map[string]any{"type": map[string]any{"in": types}}
+	}
+	if len(types) > 0 {
+		clauses = append(clauses, map[string]any{"type": map[string]any{"in": types}})
+	}
+	return map[string]any{"or": clauses}
 }
 
 // ListIssues returns issues matching the filter, newest updated first. When
@@ -101,7 +128,7 @@ func ListIssues(f IssueFilter) ([]Issue, error) {
 		pageSize = 250 // fewer round-trips for a full pull
 	}
 
-	var all []Issue
+	all := []Issue{} // non-nil so --json prints [] rather than null
 	var after string
 	for {
 		var out struct {

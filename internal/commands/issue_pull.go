@@ -65,7 +65,7 @@ func issuePull() *cli.Command {
 		Usage: "Bulk-fetch a team's issues (optionally by status) to Parquet, JSON, or a table",
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "team", Aliases: []string{"t"}, Usage: "Team key (default: config defaultTeam)"},
-			&cli.StringSliceFlag{Name: "state", Aliases: []string{"s"}, Usage: "State type (repeatable): backlog|unstarted|started|completed|canceled|triage|duplicate"},
+			&cli.StringSliceFlag{Name: "state", Aliases: []string{"s"}, Usage: "State type or name (repeatable): backlog|unstarted|started|completed|canceled|triage|duplicate, or e.g. Review"},
 			&cli.BoolFlag{Name: "not-done", Usage: "Exclude completed/canceled (overrides --state)"},
 			&cli.StringFlag{Name: "parquet", Aliases: []string{"o"}, Usage: "Write results to this .parquet file"},
 			&cli.BoolFlag{Name: "json"},
