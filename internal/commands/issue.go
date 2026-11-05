@@ -21,6 +21,7 @@ func NewIssue() *cli.Command {
 		Commands: []*cli.Command{
 			issueList(),
 			issuePull(),
+			issueExport(),
 			issueView(),
 			issueCreate(),
 			issueUpdate(),

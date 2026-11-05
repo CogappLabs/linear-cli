@@ -57,6 +57,7 @@ linear-cli whoami [--json]
 
 linear-cli issue list [-t KEY] [--mine] [-s STATE_TYPE_OR_NAME ...] [--not-done] [-n N] [--all] [--json]
 linear-cli issue pull -t KEY [-s STATE_TYPE_OR_NAME ...] [--not-done] [-o out.parquet | --json]
+linear-cli issue export ID [ID...] [-o DIR]
 linear-cli issue view [ID] [--comments] [--json]
 linear-cli issue create -T TITLE [-t KEY] [-d DESC] [-a EMAIL|me] [-p 0-4] [-l LABEL ...] [--json]
 linear-cli issue update [ID] [-T TITLE] [-d DESC] [-s STATE_NAME] [-a EMAIL|me] [-p 0-4] [-l LABEL ...] [--remove-label LABEL ...] [--json]
@@ -109,6 +110,17 @@ linear-cli config show
 
 `[ID]` is optional on single-issue commands; when omitted the CLI reads an
 `ABC-123` identifier from the current git branch name.
+
+### Export with media
+
+`issue export` writes `DIR/issues.json` (issue fields plus comments) and
+downloads every `uploads.linear.app` file linked from the description or
+comments (images and videos) to `DIR/media/<ID>/`. Useful for handing issues
+to someone without Linear access.
+
+```bash
+linear-cli issue export PECK-138 PECK-109 -o handover
+```
 
 ### Bulk pull + Parquet
 

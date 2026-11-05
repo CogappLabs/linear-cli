@@ -65,6 +65,15 @@ Multi-status filtering lives in `buildIssueFilter`: `--state` (repeatable) →
 `state.type.in`; `--not-done` → `state.type.nin ["completed","canceled"]`
 (overrides `--state`). Shared by `issue list` and `issue pull`.
 
+## Export with media
+
+`issue export ID...` (`issue_export.go`) writes `DIR/issues.json` (flattened
+fields + comments) and downloads every `uploads.linear.app` link in the
+description and comments to `DIR/media/<ID>/`. Videos are posted as
+`[name](url)`, not `![]()`, so `client.FindUploads` matches any markdown link
+to the upload store. Downloads send the API key in `Authorization`, the same as
+GraphQL; the URLs are not public.
+
 ## Linear MCP parity
 
 Full MCP-tool → CLI mapping with status is in `README.md`. Built: issues (incl.
@@ -98,7 +107,7 @@ commands live in their own files, and their GraphQL wrappers live in
 `internal/client/queries_<domain>.go` (not the shared `queries.go`) so they can
 be added independently:
 
-- `issue.go` + `issue_mutate.go` + `issue_comments.go` + `issue_pull.go`
+- `issue.go` + `issue_mutate.go` + `issue_comments.go` + `issue_pull.go` + `issue_export.go`
 - `team.go`, `user.go` (list + view)
 - `project.go` (+ `queries_project.go`, list/view/save)
 - `milestone.go` (+ `queries_milestone.go`, list/view/save)
@@ -124,4 +133,4 @@ depends on that.
 
 ## Available commands
 
-`auth login|status`, `whoami`, `issue list|pull|view|create|update|start|comment|comments|comment-edit|comment-delete|url|branch`, `team list|view`, `user list|view`, `project list|view|save`, `milestone list|view|save`, `cycle list`, `label list|create`, `document list|view|save`, `status list|view`, `attachment list|add|delete`, `release list|view|notes`, `status-update list|create|delete`, `agent-skill list|view`, `config set-team|show`.
+`auth login|status`, `whoami`, `issue list|pull|export|view|create|update|start|comment|comments|comment-edit|comment-delete|url|branch`, `team list|view`, `user list|view`, `project list|view|save`, `milestone list|view|save`, `cycle list`, `label list|create`, `document list|view|save`, `status list|view`, `attachment list|add|delete`, `release list|view|notes`, `status-update list|create|delete`, `agent-skill list|view`, `config set-team|show`.

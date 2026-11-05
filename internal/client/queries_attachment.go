@@ -227,3 +227,49 @@ func DeleteAttachment(id string) error {
 	}
 	return nil
 }
+
+// uploadLinkRe matches markdown links and images pointing at Linear's upload
+// store. Videos and other files are posted as [name](url), images as ![](url).
+var uploadLinkRe = regexp.MustCompile(`\[([^\]]*)\]\((https://uploads\.linear\.app/[^)\s]+)\)`)
+
+// Upload is a file referenced from issue or comment markdown.
+type Upload struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
+
+// FindUploads returns every uploads.linear.app link in markdown, in order.
+func FindUploads(markdown string) []Upload {
+	var out []Upload
+	for _, m := range uploadLinkRe.FindAllStringSubmatch(markdown, -1) {
+		out = append(out, Upload{Name: m[1], URL: m[2]})
+	}
+	return out
+}
+
+// DownloadUpload fetches a Linear upload to dest. The upload store needs the
+// API key in the Authorization header, the same as GraphQL.
+func DownloadUpload(url, dest string) error {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", apiKey)
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode >= 400 {
+		return fmt.Errorf("download %s: %s", url, res.Status)
+	}
+	f, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(f, res.Body); err != nil {
+		f.Close()
+		return err
+	}
+	return f.Close()
+}
