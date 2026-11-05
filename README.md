@@ -122,6 +122,25 @@ to someone without Linear access.
 linear-cli issue export PECK-138 PECK-109 -o handover
 ```
 
+To hand them over as a Google Sheet, run `scripts/export_to_sheet.py`:
+
+```bash
+uv run --with-editable ~/git/cogapp-sheets python scripts/export_to_sheet.py handover SHEET_ID FOLDER_ID
+```
+
+It moves the sheet into the Drive folder, uploads the media there, and writes
+one row per issue to the first tab as a native table: ID (linked to Linear),
+title, status, assignee, priority, labels, description, comments (oldest
+first) and a link to the media in Drive. Descriptions lose the team's unfilled
+story template, and links to Cogapp Slack files or Linear uploads are removed
+or pointed at the Media column, since the reader can't open them. Needs
+`cogapp-sheets` (`~/git/cogapp-sheets`) and ADC with the
+Drive scope:
+
+```bash
+gcloud auth application-default login --scopes=https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/drive
+```
+
 ### Bulk pull + Parquet
 
 `issue pull` fetches a team's entire matching set (paging through all results,

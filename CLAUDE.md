@@ -74,6 +74,13 @@ description and comments to `DIR/media/<ID>/`. Videos are posted as
 to the upload store. Downloads send the API key in `Authorization`, the same as
 GraphQL; the URLs are not public.
 
+`scripts/export_to_sheet.py` turns that directory into a Google Sheet (Drive
+upload, one native-table row per issue). Link columns are written
+`USER_ENTERED` and everything else `RAW`, so descriptions starting with `=` or
+`-` stay text. `clean()` strips the story template and unreachable links; edit
+`TEMPLATE_RE` if the Linear template changes. Rerunning it uploads the media
+again, so fix an existing sheet by rewriting columns instead.
+
 ## Linear MCP parity
 
 Full MCP-tool → CLI mapping with status is in `README.md`. Built: issues (incl.
