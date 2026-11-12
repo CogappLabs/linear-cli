@@ -32,6 +32,10 @@ type Comment struct {
 	Body      string `json:"body"`
 	CreatedAt string `json:"createdAt"`
 	User      *User  `json:"user"`
+	// Set on a reply: the comment that starts its thread.
+	Parent *struct {
+		ID string `json:"id"`
+	} `json:"parent,omitempty"`
 }
 
 type Issue struct {

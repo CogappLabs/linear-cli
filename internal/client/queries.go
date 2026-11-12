@@ -158,7 +158,7 @@ func ListComments(issueID string) ([]Comment, error) {
 	q := `query($id: String!, $first: Int!, $after: String) {
 		issue(id: $id) {
 			comments(first: $first, after: $after) {
-				nodes { id body createdAt user { name displayName } }
+				nodes { id body createdAt user { name displayName } parent { id } }
 				pageInfo { hasNextPage endCursor }
 			}
 		}
@@ -238,8 +238,9 @@ func UpdateIssue(id string, input map[string]any) (*Issue, error) {
 	return &out.IssueUpdate.Issue, nil
 }
 
-// AddComment posts a comment on an issue (UUID required by the API).
-func AddComment(issueID, body string) error {
+// AddComment posts a comment on an issue (UUID required by the API). A
+// non-empty parentID posts it as a reply in that comment's thread.
+func AddComment(issueID, body, parentID string) error {
 	q := `mutation($input: CommentCreateInput!) {
 		commentCreate(input: $input) { success }
 	}`
@@ -249,6 +250,9 @@ func AddComment(issueID, body string) error {
 		} `json:"commentCreate"`
 	}
 	input := map[string]any{"issueId": issueID, "body": body}
+	if parentID != "" {
+		input["parentId"] = parentID
+	}
 	if err := Query(q, map[string]any{"input": input}, &out); err != nil {
 		return err
 	}

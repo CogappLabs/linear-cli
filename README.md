@@ -62,7 +62,7 @@ linear-cli issue view [ID] [--comments] [--json]
 linear-cli issue create -T TITLE [-t KEY] [-d DESC] [-a EMAIL|me] [-p 0-4] [-l LABEL ...] [--json]
 linear-cli issue update [ID] [-T TITLE] [-d DESC] [-s STATE_NAME] [-a EMAIL|me] [-p 0-4] [-l LABEL ...] [--remove-label LABEL ...] [--json]
 linear-cli issue start [ID] [--json]
-linear-cli issue comment [ID] -b BODY
+linear-cli issue comment [ID] -b BODY [-r COMMENT_ID]   # -r replies in that comment's thread; the 8-char prefix from a #comment-… URL works
 linear-cli issue comment-edit COMMENT_ID -b BODY
 linear-cli issue comment-delete COMMENT_ID
 linear-cli issue url [ID]

@@ -224,10 +224,11 @@ func issueStart() *cli.Command {
 func issueComment() *cli.Command {
 	return &cli.Command{
 		Name:      "comment",
-		Usage:     "Add a comment to an issue",
-		ArgsUsage: "[ID] --body TEXT",
+		Usage:     "Add a comment to an issue, or reply in a comment's thread",
+		ArgsUsage: "[ID] --body TEXT [--reply-to COMMENT_ID]",
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "body", Aliases: []string{"b"}, Usage: "Comment body (required)"},
+			&cli.StringFlag{Name: "reply-to", Aliases: []string{"r"}, Usage: "Reply in this comment's thread: its id, or the prefix after #comment- in its URL"},
 		},
 		Action: func(_ context.Context, c *cli.Command) error {
 			if err := requireAuth(); err != nil {
@@ -249,10 +250,24 @@ func issueComment() *cli.Command {
 			if is.ID == "" {
 				return fmt.Errorf("issue %s not found", id)
 			}
-			if err := client.AddComment(is.ID, body); err != nil {
+			var parentID string
+			if ref := c.String("reply-to"); ref != "" {
+				comments, err := client.ListComments(is.ID)
+				if err != nil {
+					return err
+				}
+				if parentID, err = threadRoot(comments, ref); err != nil {
+					return err
+				}
+			}
+			if err := client.AddComment(is.ID, body, parentID); err != nil {
 				return err
 			}
-			fmt.Printf("Commented on %s\n", is.Identifier)
+			if parentID != "" {
+				fmt.Printf("Replied on %s\n", is.Identifier)
+			} else {
+				fmt.Printf("Commented on %s\n", is.Identifier)
+			}
 			return nil
 		},
 	}
@@ -329,6 +344,29 @@ func resolveUserID(spec string) (string, error) {
 }
 
 // resolveStateID maps a state name (case-insensitive) to its id within a team.
+// threadRoot finds the comment `ref` names (a full id or a unique prefix, as in
+// a URL's #comment-d1b98624) and returns the id of the comment that starts its
+// thread, since Linear threads are one level deep.
+func threadRoot(comments []client.Comment, ref string) (string, error) {
+	ref = strings.ToLower(strings.TrimPrefix(ref, "comment-"))
+	var match *client.Comment
+	for i := range comments {
+		if strings.HasPrefix(comments[i].ID, ref) {
+			if match != nil {
+				return "", fmt.Errorf("comment %q matches more than one comment; use more of its id", ref)
+			}
+			match = &comments[i]
+		}
+	}
+	if match == nil {
+		return "", fmt.Errorf("no comment on this issue starts with %q", ref)
+	}
+	if match.Parent != nil && match.Parent.ID != "" {
+		return match.Parent.ID, nil
+	}
+	return match.ID, nil
+}
+
 func resolveStateID(teamID, name string) (string, error) {
 	states, err := client.TeamStates(teamID)
 	if err != nil {
