@@ -82,7 +82,7 @@ linear-cli milestone list -p PROJECT_ID [--json]
 linear-cli milestone view ID [--json]
 linear-cli milestone save [ID] --name NAME [-p PROJECT_ID] [-d DESC] [--target-date YYYY-MM-DD] [--json]
 linear-cli cycle list -t KEY [--json]
-linear-cli label list [-t KEY] [--json]
+linear-cli label list [-t KEY] [--json]       # -t adds workspace labels; all pages
 linear-cli label create -t KEY --name NAME [--color HEX] [--description D] [--json]
 linear-cli document list [--json]
 linear-cli document view ID [--json]

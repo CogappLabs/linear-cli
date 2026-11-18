@@ -50,11 +50,11 @@ func labelList() *cli.Command {
 }
 
 func renderLabelRow(l client.LabelDetail) {
-	line := format.PadRight(format.Cyan(l.Name), 30) + l.Color
+	scope := "workspace"
 	if l.Team != nil {
-		line += "  " + l.Team.Key
+		scope = l.Team.Key
 	}
-	fmt.Println(line)
+	fmt.Println(format.PadRight(format.Cyan(l.Name), 30) + l.Color + "  " + scope)
 }
 
 func labelCreate() *cli.Command {

@@ -31,27 +31,47 @@ type labelConnection struct {
 	} `json:"pageInfo"`
 }
 
-// ListLabels returns issue labels, optionally filtered to a team by key.
+// ListLabels returns every issue label. With a team key it returns the labels
+// that team's issues can carry: its own plus workspace labels.
 func ListLabels(teamKey string) ([]LabelDetail, error) {
-	filter := map[string]any{}
-	if teamKey != "" {
-		filter["team"] = map[string]any{"key": map[string]any{"eq": teamKey}}
-	}
+	return queryLabels(labelFilter("key", teamKey))
+}
 
-	q := fmt.Sprintf(`query($filter: IssueLabelFilter, $first: Int!) {
-		issueLabels(filter: $filter, first: $first) {
+// labelFilter scopes labels to one team (by "key" or "id") plus the workspace
+// labels, which have no team. An empty value means no filter.
+func labelFilter(field, value string) map[string]any {
+	if value == "" {
+		return map[string]any{}
+	}
+	return map[string]any{"or": []map[string]any{
+		{"team": map[string]any{field: map[string]any{"eq": value}}},
+		{"team": map[string]any{"null": true}},
+	}}
+}
+
+func queryLabels(filter map[string]any) ([]LabelDetail, error) {
+	q := fmt.Sprintf(`query($filter: IssueLabelFilter, $first: Int!, $after: String) {
+		issueLabels(filter: $filter, first: $first, after: $after) {
 			nodes { %s }
 			pageInfo { hasNextPage endCursor }
 		}
 	}`, labelFields)
 
-	var out struct {
-		IssueLabels labelConnection `json:"issueLabels"`
+	var all []LabelDetail
+	vars := map[string]any{"filter": filter, "first": 250}
+	for {
+		var out struct {
+			IssueLabels labelConnection `json:"issueLabels"`
+		}
+		if err := Query(q, vars, &out); err != nil {
+			return nil, err
+		}
+		all = append(all, out.IssueLabels.Nodes...)
+		if !out.IssueLabels.PageInfo.HasNextPage {
+			return all, nil
+		}
+		vars["after"] = out.IssueLabels.PageInfo.EndCursor
 	}
-	if err := Query(q, map[string]any{"filter": filter, "first": 100}, &out); err != nil {
-		return nil, err
-	}
-	return out.IssueLabels.Nodes, nil
 }
 
 // CreateLabel creates an issue label and returns it.
@@ -77,33 +97,7 @@ func CreateLabel(input map[string]any) (*LabelDetail, error) {
 	return &out.IssueLabelCreate.IssueLabel, nil
 }
 
-// TeamUsableLabels returns the labels an issue in the team can carry: the
-// team's own labels plus workspace labels, which have no team.
+// TeamUsableLabels returns the labels an issue in the team can carry.
 func TeamUsableLabels(teamID string) ([]LabelDetail, error) {
-	filter := map[string]any{"or": []map[string]any{
-		{"team": map[string]any{"id": map[string]any{"eq": teamID}}},
-		{"team": map[string]any{"null": true}},
-	}}
-	q := fmt.Sprintf(`query($filter: IssueLabelFilter, $first: Int!, $after: String) {
-		issueLabels(filter: $filter, first: $first, after: $after) {
-			nodes { %s }
-			pageInfo { hasNextPage endCursor }
-		}
-	}`, labelFields)
-
-	var all []LabelDetail
-	vars := map[string]any{"filter": filter, "first": 250}
-	for {
-		var out struct {
-			IssueLabels labelConnection `json:"issueLabels"`
-		}
-		if err := Query(q, vars, &out); err != nil {
-			return nil, err
-		}
-		all = append(all, out.IssueLabels.Nodes...)
-		if !out.IssueLabels.PageInfo.HasNextPage {
-			return all, nil
-		}
-		vars["after"] = out.IssueLabels.PageInfo.EndCursor
-	}
+	return queryLabels(labelFilter("id", teamID))
 }

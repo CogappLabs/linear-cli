@@ -17,7 +17,7 @@ Go CLI for Linear. Wraps the Linear GraphQL API for issues, teams, and users fro
 - Every read command supports `--json` (raw struct dump). Human output is the default.
 - Commands that act on a single issue (`view`, `update`, `start`, `comment`, `url`, `branch`) take an optional `[ID]` arg; when omitted they fall back to `gitutil.IssueIDFromBranch()`.
 - Issue identifiers (`ABC-123`) are passed straight to the API. `issue(id:)` and `issueUpdate(id:)` accept them. Only `commentCreate` needs the issue UUID, so `issue comment` resolves the identifier to a UUID via `GetIssue` first. `issue comment --reply-to` resolves a comment id or URL prefix to its thread's root (`threadRoot`) and sends it as `parentId`, since Linear threads are one level deep.
-- State names, label names and assignee emails are resolved to ids client-side (`resolveStateID`, `resolveLabelIDs`, `resolveUserID`) because the mutations want ids. Labels match the team's own plus workspace labels; `issue update -l` adds via `addedLabelIds` rather than replacing. `--assignee me` and state-by-name are the ergonomic path.
+- State names, label names and assignee emails are resolved to ids client-side (`resolveStateID`, `resolveLabelIDs`, `resolveUserID`) because the mutations want ids. Labels match the team's own plus workspace labels, and so do `label list -t` and the duplicate check in `label create` (both via `labelFilter`); `issue update -l` adds via `addedLabelIds` rather than replacing. `--assignee me` and state-by-name are the ergonomic path.
 
 ## Adding a new command
 
@@ -43,7 +43,7 @@ Endpoint: `https://api.linear.app/graphql`. Introspect with `scripts/introspect.
 
 - `issue(id: String!)` accepts either the identifier (`ABC-123`) or the UUID.
 - `issues(filter: IssueFilter, first: Int, orderBy: updatedAt)`: filter is nested comparators, e.g. `{ team: { key: { eq: "ENG" } }, assignee: { id: { eq: "<uuid>" } }, state: { type: { eq: "started" } } }`.
-- Connections wrap lists as `{ nodes { … }, pageInfo { hasNextPage endCursor } }`. Current commands take the first page only; add cursor paging when a list needs it.
+- Connections wrap lists as `{ nodes { … }, pageInfo { hasNextPage endCursor } }`. Most list commands take the first page only; `issue list --all`, `issue pull` and `label list` page to the end.
 - `IssueCreateInput` requires `teamId`; useful optional fields: `title`, `description` (markdown), `assigneeId`, `stateId`, `priority` (0-4), `labelIds`, `projectId`, `projectMilestoneId`, `parentId`, `dueDate` (TimelessDate), `cycleId`.
 - `IssueUpdateInput` mirrors those (no `teamId` needed; the issue already has a team).
 - `IssueRelation` rows read `issue <type> relatedIssue` (types: blocks, duplicate, related, similar). `issue.relations` are outgoing, `issue.inverseRelations` incoming; "blocked by" is a `blocks` row with the issues swapped. `issueRelationDelete` takes the relation id.
