@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/CogappLabs/linear-cli/internal/client"
 	"github.com/CogappLabs/linear-cli/internal/format"
@@ -75,6 +76,21 @@ func labelCreate() *cli.Command {
 			team, err := client.TeamByKey(c.String("team"))
 			if err != nil {
 				return err
+			}
+			// The API only says "duplicate label name", which hides that the
+			// clash is often a workspace label the team can already use.
+			existing, err := client.TeamUsableLabels(team.ID)
+			if err != nil {
+				return err
+			}
+			for _, l := range existing {
+				if strings.EqualFold(l.Name, c.String("name")) {
+					scope := "workspace"
+					if l.Team != nil {
+						scope = "team " + l.Team.Key
+					}
+					return fmt.Errorf("label %q already exists (%s); apply it with `issue update -l`", l.Name, scope)
+				}
 			}
 			input := map[string]any{
 				"teamId": team.ID,
